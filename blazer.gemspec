@@ -4,10 +4,12 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "blazer/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "blazer"
+  spec.name          = "sql-jarvis"
   spec.version       = Blazer::VERSION
-  spec.summary       = "Explore your data with SQL. Easily create charts and dashboards, and share them with your team."
-  spec.homepage      = "https://github.com/ankane/blazer"
+  spec.authors       = ["ThanhKhoaIT"]
+  spec.email         = ["thanhkhoait@gmail.com"]
+  spec.summary       = "Fork from ankane! Explore your data with SQL. Easily create charts and dashboards, and share them with your team."
+  spec.homepage      = "https://github.com/ThanhKhoaIT/blazer"
   spec.license       = "MIT"
 
   spec.author        = "Andrew Kane"

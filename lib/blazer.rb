@@ -42,6 +42,7 @@ module Blazer
     attr_accessor :transform_statement
     attr_accessor :transform_variable
     attr_accessor :check_schedules
+    attr_accessor :mapbox_access_token
     attr_accessor :anomaly_checks
     attr_accessor :forecasting
     attr_accessor :async
@@ -54,6 +55,7 @@ module Blazer
   self.audit = true
   self.user_name = :name
   self.check_schedules = ["5 minutes", "1 hour", "1 day"]
+  self.mapbox_access_token = nil
   self.anomaly_checks = false
   self.forecasting = false
   self.async = false

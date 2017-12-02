@@ -14,6 +14,20 @@ module Blazer
       Blazer.from_email = Blazer.settings["from_email"] if Blazer.settings["from_email"]
       Blazer.before_action = Blazer.settings["before_action_method"] if Blazer.settings["before_action_method"]
       Blazer.check_schedules = Blazer.settings["check_schedules"] if Blazer.settings.key?("check_schedules")
+
+      if Blazer.settings.key?("mapbox_access_token")
+        Blazer.mapbox_access_token = Blazer.settings["mapbox_access_token"]
+      elsif ENV["MAPBOX_ACCESS_TOKEN"].present?
+        Blazer.mapbox_access_token = ENV["MAPBOX_ACCESS_TOKEN"]
+      end
+
+      if Blazer.user_class
+        options = Blazer::BELONGS_TO_OPTIONAL.merge(class_name: Blazer.user_class.to_s)
+        Blazer::Query.belongs_to :creator, options
+        Blazer::Dashboard.belongs_to :creator, options
+        Blazer::Check.belongs_to :creator, options
+      end
+
       Blazer.cache ||= Rails.cache
 
       Blazer.anomaly_checks = Blazer.settings["anomaly_checks"] || false
