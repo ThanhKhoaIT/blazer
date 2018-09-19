@@ -3,6 +3,7 @@
  *= require ./selectize.default
  *= require ./github
  *= require ./daterangepicker
+ *= require ./select2.min
  *= require_self
  */
 

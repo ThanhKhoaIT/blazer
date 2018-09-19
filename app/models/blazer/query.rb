@@ -1,5 +1,7 @@
 module Blazer
   class Query < Record
+    serialize :assignee_ids, Array
+
     belongs_to :creator, Blazer::BELONGS_TO_OPTIONAL.merge(class_name: Blazer.user_class.to_s) if Blazer.user_class
     has_many :checks, dependent: :destroy
     has_many :dashboard_queries, dependent: :destroy
@@ -31,6 +33,10 @@ module Blazer
       editable &&= viewable?(user)
       editable &&= Blazer.query_editable.call(self, user) if Blazer.query_editable
       editable
+    end
+
+    def self.creatable?(user)
+      Blazer.query_creatable.call(user) if Blazer.query_creatable
     end
 
     def variables

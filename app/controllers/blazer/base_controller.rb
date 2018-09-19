@@ -64,7 +64,12 @@ module Blazer
               end
             end
             value = Blazer.transform_variable.call(var, value) if Blazer.transform_variable
-            statement.gsub!("{#{var}}", ActiveRecord::Base.connection.quote(value))
+            if value.is_a?(Array)
+              var_value = value.map{|v| ActiveRecord::Base.connection.quote(v)}.join(', ')
+            else
+              var_value = ActiveRecord::Base.connection.quote(value)
+            end
+            statement.gsub!("{#{var}}", var_value)
           end
         end
       end

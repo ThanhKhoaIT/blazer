@@ -16,6 +16,7 @@
 //= require ./routes
 //= require ./queries
 //= require ./fuzzysearch
+//= require ./select2
 
 Vue.config.devtools = false
 Vue.config.productionTip = false

@@ -31,6 +31,7 @@ module Blazer
     end
 
     def new
+      return render_forbidden unless Blazer::Query.creatable?(blazer_user)
       @query = Blazer::Query.new(
         data_source: params[:data_source],
         name: params[:name]
@@ -41,6 +42,7 @@ module Blazer
     end
 
     def create
+      return render_forbidden unless Blazer::Query.creatable?(blazer_user)
       @query = Blazer::Query.new(query_params)
       @query.creator = blazer_user if @query.respond_to?(:creator)
 
@@ -317,7 +319,7 @@ module Blazer
       end
 
       def query_params
-        params.require(:query).permit(:name, :description, :statement, :data_source)
+        params.require(:query).permit!
       end
 
       def blazer_params

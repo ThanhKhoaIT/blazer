@@ -36,6 +36,12 @@
           <%= f.label :description %>
           <%= f.text_area :description, placeholder: "Optional", style: "height: 80px;", class: "form-control" %>
         </div>
+        <%- if Blazer.assignees.any? -%>
+          <div class="form-group">
+            <%= f.label :assignees %>
+            <%= f.collection_select :assignee_ids, Blazer.assignees, :first, :last, {}, { placeholder: "Assignees", style: "height: 80px;", class: "form-control", multiple: true } %>
+          </div>
+        <%- end -%>
         <div class="form-group text-right">
           <%= f.submit "For Enter Press", class: "hide" %>
           <% if @query.persisted? %>
@@ -242,4 +248,8 @@
       this.showEditor()
     }
   })
+
+  $(document).ready(function() {
+    $('#query_assignee_ids').select2();
+  });
 </script>

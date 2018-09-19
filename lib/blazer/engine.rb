@@ -21,6 +21,14 @@ module Blazer
         Blazer.mapbox_access_token = ENV["MAPBOX_ACCESS_TOKEN"]
       end
 
+      if Blazer.settings.key?('assignees')
+        data_source = Blazer.data_sources['main']
+        statement = Blazer.settings['assignees']
+        Blazer.assignees = Blazer::RunStatement.new.perform(data_source, statement, {}).rows
+      else
+        Blazer.assignees = []
+      end
+
       if Blazer.user_class
         options = Blazer::BELONGS_TO_OPTIONAL.merge(class_name: Blazer.user_class.to_s)
         Blazer::Query.belongs_to :creator, options
