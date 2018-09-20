@@ -24,7 +24,7 @@ module Blazer
       if Blazer.settings.key?('assignees')
         data_source = Blazer.data_sources['main']
         statement = Blazer.settings['assignees']
-        Blazer.assignees = Blazer::RunStatement.new.perform(data_source, statement, {}).rows
+        Blazer.assignees = (Blazer::RunStatement.new.perform(data_source, statement, {}).rows rescue [])
       else
         Blazer.assignees = []
       end
