@@ -1,7 +1,8 @@
 module Blazer
   class QueriesController < BaseController
     before_action :set_query, only: [:show, :edit, :update, :destroy, :refresh]
-    before_action :set_data_source, only: [:tables, :docs, :schema, :cancel]
+    before_action :set_data_source, only: [:tables, :docs, :schema, :cancel, :columns]
+    before_action :set_assignees, only: [:new, :create, :show, :edit, :update, :destroy, :refresh]
 
     def home
       set_queries(1000)
@@ -191,6 +192,16 @@ module Blazer
       @smart_columns = @data_source.smart_columns
     end
 
+    def columns
+      column_names = []
+      @data_source.schema.map do |t|
+        if params[:tables].include?(t[:table])
+          column_names += t[:columns].map { |c| c[:name] }
+        end
+      end
+      render json: column_names
+    end
+
     def schema
       @schema = @data_source.schema
     end
@@ -311,6 +322,19 @@ module Blazer
 
         unless @query.viewable?(blazer_user)
           render_forbidden
+        end
+      end
+
+      def set_assignees
+        if Blazer.settings.key?('assignees')
+          source = params[:data_source] || 'main'
+          data_source = Blazer.data_sources[source]
+          statement = Blazer.settings['assignees']
+          @assignees = Rails.cache.fetch 'jarvis_assignees' do
+            (Blazer::RunStatement.new.perform(data_source, statement, {}).rows rescue [])
+          end
+        else
+          @assignees = []
         end
       end
 

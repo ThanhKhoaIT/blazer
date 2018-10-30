@@ -14,6 +14,9 @@ var Routes = {
   tables_queries_path: function(params) {
     return rootPath + "queries/tables?" + $.param(params)
   },
+  columns_queries_path: function(params) {
+    return rootPath + "queries/columns?" + $.param(params)
+  },
   queries_path: function() {
     return rootPath + "queries"
   },

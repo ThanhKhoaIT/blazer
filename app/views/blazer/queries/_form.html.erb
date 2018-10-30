@@ -36,10 +36,10 @@
           <%= f.label :description %>
           <%= f.text_area :description, placeholder: "Optional", style: "height: 80px;", class: "form-control" %>
         </div>
-        <%- if Blazer.assignees.any? -%>
+        <%- if @assignees.any? -%>
           <div class="form-group">
             <%= f.label :assignees %>
-            <%= f.collection_select :assignee_ids, Blazer.assignees, :first, :last, {}, { placeholder: "Assignees", style: "height: 80px;", class: "form-control", multiple: true } %>
+            <%= f.collection_select :assignee_ids, @assignees, :first, :last, {}, { placeholder: "Assignees", style: "height: 80px;", class: "form-control", multiple: true } %>
           </div>
         <%- end -%>
         <div class="form-group text-right">
@@ -152,12 +152,12 @@
         editor.setTheme("ace/theme/twilight")
         editor.getSession().setMode("ace/mode/sql")
         editor.setOptions({
-          enableBasicAutocompletion: false,
-          enableSnippets: false,
-          enableLiveAutocompletion: false,
-          highlightActiveLine: false,
           fontSize: 12,
-          minLines: 10
+          minLines: 10,
+          enableSnippets: false,
+          highlightActiveLine: false,
+          enableLiveAutocompletion: true,
+          enableBasicAutocompletion: true
         })
         editor.renderer.setShowGutter(true)
         editor.renderer.setPrintMarginColumn(false)
@@ -173,6 +173,62 @@
         })
         // fix command+L
         editor.commands.removeCommands(["gotoline", "find"])
+
+        var langTools = ace.require("ace/ext/language_tools");
+
+        var addSuggestItems = function(callback) {
+          if (window.tableNames === undefined) return;
+          callback(null, window.tableNames.map(function(table) {
+            return { name: table, value: table, score: 100, meta: "table" };
+          }));
+        }
+
+        // Load tables
+        langTools.addCompleter({
+          getCompletions: function(editor, session, pos, prefix, callback) {
+            if (prefix.length === 0) { callback(null, []); return }
+            if (window.tableNames !== undefined) {
+              addSuggestItems(callback);
+            } else {
+              $.getJSON(
+                Routes.tables_queries_path({data_source: this.dataSource})
+                , function(tables) {
+                  window.tableNames = tables;
+                  // wordList like [{"word":"flow","freq":24,"score":300,"flags":"bc","syllables":"1"}]
+                  addSuggestItems(callback);
+                }
+              )
+            }
+          }
+        });
+
+        // Load columns
+        langTools.addCompleter({
+          getCompletions: function(editor, session, pos, prefix, callback) {
+            if (prefix.length === 0) { callback(null, []); return }
+            var sql = $('#query_statement').val();
+            tables = sql.toLowerCase().match(/(join|from) ([a-z_]{2,50})/g);
+            if (tables === null) { callback(null, []); return }
+            tables = tables.map(function(table) { return table.split(' ')[1] });
+            key = tables.join('-');
+            if (window[key]) {
+              callback(null, window[key].map(function(col) {
+                return { name: col, value: col, score: 100, meta: "column" };
+              }));
+            } else {
+              $.getJSON(
+                Routes.columns_queries_path({data_source: this.dataSource, tables: tables})
+                , function(columns) {
+                  window[key] = Array.from(new Set(columns));
+                  // wordList like [{"word":"flow","freq":24,"score":300,"flags":"bc","syllables":"1"}]
+                  callback(null, window[key].map(function(col) {
+                    return { name: col, value: col, score: 100, meta: "column" };
+                  }));
+                }
+              )
+            }
+          }
+        });
 
         this.editor = editor
 
@@ -252,4 +308,5 @@
   $(document).ready(function() {
     $('#query_assignee_ids').select2();
   });
+
 </script>
