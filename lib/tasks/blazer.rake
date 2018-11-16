@@ -8,4 +8,9 @@ namespace :blazer do
   task send_failing_checks: :environment do
     Blazer.send_failing_checks
   end
+
+  desc "send failing after real checks"
+  task :send_failing_after_checks, [:schedule] => :environment do |_, args|
+    Blazer.send_failing_after_checks(schedule: args[:schedule] || ENV["SCHEDULE"])
+  end
 end

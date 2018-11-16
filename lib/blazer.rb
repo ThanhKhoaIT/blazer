@@ -38,6 +38,7 @@ module Blazer
     attr_writer :user_method
     attr_accessor :before_action
     attr_accessor :from_email
+    attr_accessor :subdomain
     attr_accessor :cache
     attr_accessor :transform_statement
     attr_accessor :transform_variable
@@ -59,6 +60,7 @@ module Blazer
   self.check_schedules = ["5 minutes", "1 hour", "1 day"]
   self.mapbox_access_token = nil
   self.assignees = []
+  self.subdomain = nil
   self.anomaly_checks = false
   self.forecasting = false
   self.async = false
@@ -123,6 +125,11 @@ module Blazer
     # strip commented out lines
     # and regex {1} or {1,2}
     statement.gsub(/\-\-.+/, "").gsub(/\/\*.+\*\//m, "").scan(/\{\w*?\}/i).map { |v| v[1...-1] }.reject { |v| /\A\d+(\,\d+)?\z/.match(v) || v.empty? }.uniq
+  end
+
+  def self.send_failing_after_checks(schedule: nil)
+    run_checks(schedule)
+    send_failing_checks
   end
 
   def self.run_checks(schedule: nil)
