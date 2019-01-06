@@ -1,4 +1,7 @@
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
-# Specify your gem's dependencies in blazer.gemspec
+gem 'zip-zip'
+gem 'axlsx'
+gem 'axlsx_rails'
+
 gemspec

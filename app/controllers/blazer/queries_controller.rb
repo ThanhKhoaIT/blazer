@@ -270,12 +270,18 @@ module Blazer
           end
         end
 
+        filename = @query.try(:name).try(:parameterize).presence || 'query'
         respond_to do |format|
           format.html do
             render layout: false
           end
+          format.xlsx do
+            parser = ::Blazer::ExcelParser.new(@query, @columns, @rows)
+            tmp_file = parser.export
+            send_file tmp_file, type: "application/xlsx; charset=utf-8; header=present", disposition: "attachment; filename=\"#{parser.filename}\""
+          end
           format.csv do
-            send_data csv_data(@columns, @rows, @data_source), type: "text/csv; charset=utf-8; header=present", disposition: "attachment; filename=\"#{@query.try(:name).try(:parameterize).presence || 'query'}.csv\""
+            send_data csv_data(@columns, @rows, @data_source), type: "text/csv; charset=utf-8; header=present", disposition: "attachment; filename=\"#{filename}.csv\""
           end
         end
       end

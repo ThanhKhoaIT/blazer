@@ -22,6 +22,9 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "railties", ">= 4.2"
   spec.add_dependency "activerecord", ">= 4.2"
+  spec.add_dependency "zip-zip"
+  spec.add_dependency "axlsx"
+  spec.add_dependency "axlsx_rails"
   spec.add_dependency "chartkick"
   spec.add_dependency "safely_block", ">= 0.1.1"
 

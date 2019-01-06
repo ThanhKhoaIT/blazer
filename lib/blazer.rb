@@ -2,12 +2,15 @@
 require "csv"
 require "yaml"
 require "chartkick"
+require "zip/zip"
+require "axlsx"
 require "safely/core"
 
 # modules
 require "blazer/version"
 require "blazer/data_source"
 require "blazer/result"
+require "blazer/excel_parser"
 require "blazer/run_statement"
 
 # adapters
@@ -234,3 +237,6 @@ Blazer.register_adapter "presto", Blazer::Adapters::PrestoAdapter
 Blazer.register_adapter "mongodb", Blazer::Adapters::MongodbAdapter
 Blazer.register_adapter "sql", Blazer::Adapters::SqlAdapter
 Blazer.register_adapter "snowflake", Blazer::Adapters::SnowflakeAdapter
+
+Mime::Type.register "application/xlsx", :xlsx
+Mime::Type.register "application/xls", :xlsx
