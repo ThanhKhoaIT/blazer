@@ -120,6 +120,7 @@ module Blazer
       settings["data_sources"].each do |id, s|
         ds[id] = Blazer::DataSource.new(id, s)
       end
+      ds.default = ds.values.first
       ds
     end
   end

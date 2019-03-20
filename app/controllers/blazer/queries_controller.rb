@@ -333,8 +333,7 @@ module Blazer
 
       def set_assignees
         if Blazer.settings.key?('assignees')
-          source = params[:data_source] || 'main'
-          data_source = Blazer.data_sources[source]
+          data_source = Blazer.data_sources[params[:data_source]]
           statement = Blazer.settings['assignees']
           @assignees = Rails.cache.fetch 'jarvis_assignees' do
             (Blazer::RunStatement.new.perform(data_source, statement, {}).rows rescue [])
