@@ -365,7 +365,17 @@ module Blazer
       end
 
       def blazer_time_value(data_source, k, v)
-        data_source.local_time_suffix.any? { |s| k.ends_with?(s) } ? v.to_s.sub(" UTC", "") : v.in_time_zone(Blazer.time_zone)
+        if k.end_with?('_date')
+          v.in_time_zone(Blazer.time_zone).strftime("%Y/%m/%d")
+        elsif k.end_with?('_time')
+          v.in_time_zone(Blazer.time_zone).strftime("%H:%M")
+        elsif data_source.local_time_suffix.any? { |s| k.ends_with?(s) }
+          v.to_s.sub(" UTC", "")
+        else
+          v.in_time_zone(Blazer.time_zone)
+        end
+      rescue
+        return v
       end
       helper_method :blazer_time_value
 

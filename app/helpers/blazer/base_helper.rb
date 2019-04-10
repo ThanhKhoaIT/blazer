@@ -23,6 +23,10 @@ module Blazer
         else
           link_to value, value, target: "_blank"
         end
+      elsif key.end_with?("_date")
+        value.in_time_zone(Blazer.time_zone).strftime('%Y/%m/%d') rescue value
+      elsif key.end_with?("_time")
+        value.in_time_zone(Blazer.time_zone).strftime('%H:%M') rescue value
       else
         value
       end

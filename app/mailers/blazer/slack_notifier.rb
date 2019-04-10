@@ -61,7 +61,7 @@ module Blazer
     end
 
     def self.query_url(id)
-      Blazer::Engine.routes.url_helpers.query_url(id, ActionMailer::Base.default_url_options)
+      Blazer::Engine.routes.url_helpers.query_url(id, ActionMailer::Base.default_url_options, subdomain: Blazer.subdomain)
     end
 
     def self.post(url, payload)
