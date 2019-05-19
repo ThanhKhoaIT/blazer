@@ -15,7 +15,6 @@
         <div class="form-group text-right" style="margin-bottom: 8px;">
           <div class="pull-left" style="margin-top: 8px;">
             <%= link_to "Back", :back %>
-            <a :href="docsPath" target="_blank" style="margin-left: 40px;">Docs</a>
             <a :href="schemaPath" target="_blank" style="margin-left: 40px;">Schema</a>
           </div>
 
@@ -62,6 +61,8 @@
             </div>
           <% end %>
         <% end %>
+        <hr>
+        <%= render partial: "tips" %>
       </div>
     </div>
   <% end %>
@@ -305,8 +306,32 @@
     }
   })
 
+  function backupSQL() {
+    $.ajax({
+      url: "<%= backup_queries_path %>",
+      method: 'POST',
+      data: {
+        sql_query: $('#query_statement').val()
+      }
+    })
+  }
+
   $(document).ready(function() {
     $('#query_assignee_ids').select2();
+    setInterval(function() {
+      var lastVersion = $('#query_statement').val();
+      if (localStorage.getItem('lastVersion') !== lastVersion) {
+        localStorage.setItem('lastVersion', lastVersion);
+      }
+    }, 10000);
+  });
+
+  $(document).keydown(function(event) {
+    if ((event.ctrlKey || event.metaKey) && event.which == 83) {
+      backupSQL();
+      event.preventDefault();
+      return false;
+    }
   });
 
 </script>

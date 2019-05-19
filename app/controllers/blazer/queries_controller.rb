@@ -1,7 +1,7 @@
 module Blazer
   class QueriesController < BaseController
     before_action :set_query, only: [:show, :edit, :update, :destroy, :refresh]
-    before_action :set_data_source, only: [:tables, :docs, :schema, :cancel, :columns]
+    before_action :set_data_source, only: [:new, :edit, :tables, :docs, :schema, :cancel, :columns]
     before_action :set_assignees, only: [:new, :create, :show, :edit, :update, :destroy, :refresh]
 
     def home
@@ -39,6 +39,9 @@ module Blazer
       )
       if params[:fork_query_id]
         @query.statement ||= Blazer::Query.find(params[:fork_query_id]).try(:statement)
+      else
+        statement_from_cache = Rails.cache.read [:jarvis, blazer_user, request.url.parameterize]
+        @query.statement ||= statement_from_cache
       end
     end
 
@@ -71,6 +74,13 @@ module Blazer
     end
 
     def edit
+      statement_from_cache = Rails.cache.read [:jarvis, blazer_user, request.url.parameterize]
+      @query.statement = statement_from_cache || @query.statement
+    end
+
+    def backup
+      Rails.cache.write [:jarvis, blazer_user, request.referrer.parameterize], params[:sql_query]
+      render json: { success: true }, status: 200
     end
 
     def run
