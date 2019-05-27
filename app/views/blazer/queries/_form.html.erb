@@ -25,6 +25,8 @@
           <a v-on:click="run" v-if="!running" class="btn btn-info" style="vertical-align: top; width: 70px;">Run</a>
           <a v-on:click="cancel" v-if="running" class="btn btn-danger" style="vertical-align: top; width: 70px;">Cancel</a>
         </div>
+        <hr>
+        <%= render partial: "tips" %>
       </div>
       <div class="col-xs-4">
         <div class="form-group">
@@ -61,8 +63,6 @@
             </div>
           <% end %>
         <% end %>
-        <hr>
-        <%= render partial: "tips" %>
       </div>
     </div>
   <% end %>
