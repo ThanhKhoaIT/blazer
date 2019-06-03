@@ -1,0 +1,12 @@
+.btn-group{:style => "vertical-align: top; margin-right: 5px;"}
+  = link_to "Home", root_path, class: "btn btn-primary"
+  %button.btn.btn-primary.dropdown-toggle{"aria-expanded" => "false", "aria-haspopup" => "true", "data-toggle" => "dropdown", :type => "button"}
+    %span.caret
+    %span.sr-only Toggle Dropdown
+  %ul.dropdown-menu
+    %li= link_to "Checks", checks_path
+    %li.divider{:role => "separator"}
+    %li= link_to "New Query", new_query_path
+    %li= link_to "New Dashboard", new_dashboard_path
+    - check_params = @query ? {query_id: @query.id} : {}
+    %li= link_to "New Check", new_check_path(check_params)

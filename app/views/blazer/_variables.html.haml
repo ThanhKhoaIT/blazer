@@ -1,43 +1,35 @@
-<% if @bind_vars.any? %>
-  <script>
-    <%= blazer_js_var "timeZone", Blazer.time_zone.tzinfo.name %>
+- if @bind_vars.any?
+  :javascript
+    #{blazer_js_var "timeZone", Blazer.time_zone.tzinfo.name}
     var now = moment.tz(timeZone)
     var format = "YYYY-MM-DD"
 
     function toDate(time) {
       return moment.tz(time.format(format), timeZone)
     }
-  </script>
-  <form id="bind" method="get" action="<%= action %>" class="form-inline" style="margin-bottom: 15px;">
-    <% date_vars = ["start_time", "end_time"] %>
-    <% if (date_vars - @bind_vars).empty? %>
-      <% @bind_vars = @bind_vars - date_vars %>
-    <% else %>
-      <% date_vars = nil %>
-    <% end %>
-
-    <% @bind_vars.each_with_index do |var, i| %>
-      <%= label_tag var, var %>
-      <% if (data = @smart_vars[var]) %>
-        <%= select_tag var, options_for_select([[nil, nil]] + data, selected: params[var]), style: "margin-right: 20px; width: 200px; display: none;", multiple: true %>
-        <script>
-          $("#<%= var %>").selectize({
+  %form#bind.form-inline{:action => action, :method => "get", :style => "margin-bottom: 15px;"}
+    - date_vars = ["start_time", "end_time"]
+    - if (date_vars - @bind_vars).empty?
+      - @bind_vars = @bind_vars - date_vars
+    - else
+      - date_vars = nil
+    - @bind_vars.each_with_index do |var, i|
+      = label_tag var, var
+      - if (data = @smart_vars[var])
+        = select_tag var, options_for_select([[nil, nil]] + data, selected: params[var]), style: "margin-right: 20px; width: 200px; display: none;", multiple: true
+        :javascript
+          $("##{var}").selectize({
             create: true
           });
-        </script>
-      <% elsif var.end_with?("_at") || var == "start_time" || var == "end_time" %>
-        <%= hidden_field_tag var, params[var] %>
-
-        <div class="selectize-control single" style="width: 200px;">
-          <div id="<%= var %>-select" class="selectize-input" style="display: inline-block;">
-            <span>Select a date</span>
-          </div>
-        </div>
-
-        <script>
+      - elsif var.end_with?("_at") || var == "start_time" || var == "end_time"
+        = hidden_field_tag var, params[var]
+        .selectize-control.single{:style => "width: 200px;"}
+          .selectize-input{:id => "#{var}-select", :style => "display: inline-block;"}
+            %span Select a date
+        :javascript
           (function() {
-            var input = $("#<%= var %>")
-            var datePicker = $("#<%= var %>-select")
+            var input = $("##{var}")
+            var datePicker = $("##{var}-select")
             datePicker.daterangepicker({
               singleDatePicker: true,
               locale: {format: format},
@@ -48,32 +40,23 @@
             datePicker.on("apply.daterangepicker", function(ev, picker) {
               datePicker.find("span").html(toDate(picker.startDate).format("MMMM D, YYYY"))
               input.val(toDate(picker.startDate).utc().format())
-              submitIfCompleted($("#<%= var %>").closest("form"))
+              submitIfCompleted($("##{var}").closest("form"))
             })
             if (input.val().length > 0) {
               var picker = datePicker.data("daterangepicker")
               datePicker.find("span").html(toDate(picker.startDate).format("MMMM D, YYYY"))
             }
           })()
-        </script>
-      <% else %>
-        <%= text_field_tag var, params[var], style: "width: 120px; margin-right: 20px;", autofocus: i == 0 && !var.end_with?("_at") && !params[var], class: "form-control" %>
-      <% end %>
-    <% end %>
-
-    <% if date_vars %>
-      <% date_vars.each do |var| %>
-        <%= hidden_field_tag var, params[var] %>
-      <% end %>
-
-      <%= label_tag nil, date_vars.join(" & ") %>
-      <div class="selectize-control single" style="width: 300px;">
-        <div id="reportrange" class="selectize-input" style="display: inline-block;">
-          <span>Select a time range</span>
-        </div>
-      </div>
-
-      <script>
+      - else
+        = text_field_tag var, params[var], style: "width: 120px; margin-right: 20px;", autofocus: i == 0 && !var.end_with?("_at") && !params[var], class: "form-control"
+    - if date_vars
+      - date_vars.each do |var|
+        = hidden_field_tag var, params[var]
+      = label_tag nil, date_vars.join(" & ")
+      .selectize-control.single{:style => "width: 300px;"}
+        #reportrange.selectize-input{:style => "display: inline-block;"}
+          %span Select a time range
+      :javascript
         function dateStr(daysAgo) {
           return now.clone().subtract(daysAgo || 0, "days").format(format)
         }
@@ -116,9 +99,4 @@
           $("#reportrange").trigger("apply.daterangepicker", picker)
           submitIfCompleted($("#start_time").closest("form"))
         }
-      </script>
-    <% end %>
-
-    <input type="submit" class="btn btn-success" value="Run" style="vertical-align: top;" />
-  </form>
-<% end %>
+    %input.btn.btn-success{:style => "vertical-align: top;", :type => "submit", :value => "Run"}/

@@ -1,81 +1,56 @@
-<% if @query.errors.any? %>
-  <div class="alert alert-danger"><%= @query.errors.full_messages.first %></div>
-<% end %>
-
-<div id="app" v-cloak>
-  <%= form_for @query, url: (@query.persisted? ? query_path(@query, variable_params) : queries_path(variable_params)), html: {autocomplete: "off"} do |f| %>
-    <div class="row">
-      <div id="statement-box" class="col-xs-8">
-        <div class= "form-group">
-          <%= f.hidden_field :statement %>
-          <div id="editor-container">
-            <div id="editor" :style="{ height: editorHeight }"><%= @query.statement %></div>
-          </div>
-        </div>
-        <div class="form-group text-right" style="margin-bottom: 8px;">
-          <div class="pull-left" style="margin-top: 8px;">
-            <%= link_to "Back", :back %>
-            <a :href="schemaPath" target="_blank" style="margin-left: 40px;">Schema</a>
-          </div>
-
-          <%= f.select :data_source, Blazer.data_sources.values.select { |ds| q = @query.dup; q.data_source = ds.id; q.editable?(blazer_user) }.map { |ds| [ds.name, ds.id] }, {}, class: ("hide" if Blazer.data_sources.size <= 1), style: "width: 140px;" %>
-          <div id="tables" style="display: inline-block; width: 250px; margin-right: 10px;">
-            <select id="table_names" style="width: 240px;" placeholder="Preview table"></select>
-          </div>
-          <a v-on:click="run" v-if="!running" class="btn btn-info" style="vertical-align: top; width: 70px;">Run</a>
-          <a v-on:click="cancel" v-if="running" class="btn btn-danger" style="vertical-align: top; width: 70px;">Cancel</a>
-        </div>
-        <hr>
-        <%= render partial: "tips" %>
-      </div>
-      <div class="col-xs-4">
-        <div class="form-group">
-          <%= f.label :name %>
-          <%= f.text_field :name, class: "form-control" %>
-        </div>
-        <div class="form-group">
-          <%= f.label :description %>
-          <%= f.text_area :description, placeholder: "Optional", style: "height: 80px;", class: "form-control" %>
-        </div>
-        <%- if @assignees.any? -%>
-          <div class="form-group">
-            <%= f.label :assignees %>
-            <%= f.collection_select :assignee_ids, @assignees, :first, :last, {}, { placeholder: "Assignees", style: "height: 80px;", class: "form-control", multiple: true } %>
-          </div>
-        <%- end -%>
-        <div class="form-group text-right">
-          <%= f.submit "For Enter Press", class: "hide" %>
-          <% if @query.persisted? %>
-            <%= link_to "Delete", query_path(@query), method: :delete, "data-confirm" => "Are you sure?", class: "btn btn-danger" %>
-            <%= f.submit "Fork", class: "btn btn-info" %>
-          <% end %>
-          <%= f.submit @query.persisted? ? "Update" : "Create", class: "btn btn-success" %>
-        </div>
-        <% if @query.persisted? %>
-          <% dashboards_count = @query.dashboards.count %>
-          <% checks_count = @query.checks.count %>
-          <% words = [] %>
-          <% words << pluralize(dashboards_count, "dashboard") if dashboards_count > 0 %>
-          <% words << pluralize(checks_count, "check") if checks_count > 0 %>
-          <% if words.any? %>
-            <div class="alert alert-info" style="margin-bottom: 0;">
-              Part of <%= words.to_sentence %>. Be careful when editing.
-            </div>
-          <% end %>
-        <% end %>
-      </div>
-    </div>
-  <% end %>
-
-  <div id="results">
-    <p class="text-muted" v-if="running">Loading...</p>
-    <div id="results-html" v-if="!running" :class="{ 'query-error': error }"></div>
-  </div>
-</div>
-
-<script>
-  <%= blazer_js_var "params", variable_params %>
-  <%= blazer_js_var "previewStatement", Hash[Blazer.data_sources.map { |k, v| [k, (v.preview_statement rescue "")] }] %>
+- if @query.errors.any?
+  .alert.alert-danger= @query.errors.full_messages.first
+#app{"v-cloak" => ""}
+  = form_for @query, url: (@query.persisted? ? query_path(@query, variable_params) : queries_path(variable_params)), html: {autocomplete: "off"} do |f|
+    .row
+      #statement-box.col-xs-8
+        .form-group
+          = f.hidden_field :statement
+          #editor-container
+            #editor{":style" => "{ height: editorHeight }"}= @query.statement
+        .form-group.text-right{:style => "margin-bottom: 8px;"}
+          .pull-left{:style => "margin-top: 8px;"}
+            = link_to "Back", :back
+            %a{":href" => "schemaPath", :style => "margin-left: 40px;", :target => "_blank"} Schema
+          = f.select :data_source, Blazer.data_sources.values.select { |ds| q = @query.dup; q.data_source = ds.id; q.editable?(blazer_user) }.map { |ds| [ds.name, ds.id] }, {}, class: ("hide" if Blazer.data_sources.size <= 1), style: "width: 140px;"
+          #tables{:style => "display: inline-block; width: 250px; margin-right: 10px;"}
+            %select#table_names{:placeholder => "Preview table", :style => "width: 240px;"}
+          %a.btn.btn-info{:style => "vertical-align: top; width: 70px;", "v-if" => "!running", "v-on:click" => "run"} Run
+          %a.btn.btn-danger{:style => "vertical-align: top; width: 70px;", "v-if" => "running", "v-on:click" => "cancel"} Cancel
+        %hr/
+        = render partial: "tips"
+      .col-xs-4
+        .form-group
+          = f.label :name
+          = f.text_field :name, class: "form-control"
+        .form-group
+          = f.label :description
+          = f.text_area :description, placeholder: "Optional", style: "height: 80px;", class: "form-control"
+        - if @assignees.any?
+          .form-group
+            = f.label :assignees
+            = f.collection_select :assignee_ids, @assignees, :first, :last, {}, { placeholder: "Assignees", style: "height: 80px;", class: "form-control", multiple: true }
+        .form-group.text-right
+          = f.submit "For Enter Press", class: "hide"
+          - if @query.persisted?
+            = link_to "Delete", query_path(@query), method: :delete, "data-confirm" => "Are you sure?", class: "btn btn-danger"
+            = f.submit "Fork", class: "btn btn-info"
+          = f.submit @query.persisted? ? "Update" : "Create", class: "btn btn-success"
+        - if @query.persisted?
+          - dashboards_count = @query.dashboards.count
+          - checks_count = @query.checks.count
+          - words = []
+          - words << pluralize(dashboards_count, "dashboard") if dashboards_count > 0
+          - words << pluralize(checks_count, "check") if checks_count > 0
+          - if words.any?
+            .alert.alert-info{:style => "margin-bottom: 0;"}
+              Part of #{words.to_sentence}. Be careful when editing.
+  #results
+    %p.text-muted{"v-if" => "running"} Loading...
+    #results-html{":class" => "{ 'query-error': error }", "v-if" => "!running"}
+:javascript
+  #{blazer_js_var "params", variable_params}
+  #{blazer_js_var "previewStatement", Hash[Blazer.data_sources.map { |k, v| [k, (v.preview_statement rescue "")] }]}
 
   var app = new Vue({
     el: "#app",
@@ -308,7 +283,7 @@
 
   function backupSQL() {
     $.ajax({
-      url: "<%= backup_queries_path %>",
+      url: "#{backup_queries_path}",
       method: 'POST',
       data: {
         sql_query: $('#query_statement').val()
@@ -333,5 +308,3 @@
       return false;
     }
   });
-
-</script>

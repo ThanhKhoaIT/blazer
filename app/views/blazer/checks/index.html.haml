@@ -1,0 +1,48 @@
+- blazer_title "Checks"
+#header
+  .pull-right{:style => "line-height: 34px;"}
+    .btn-group
+      = link_to "New Check", new_check_path, class: "btn btn-info"
+      %button.btn.btn-info.dropdown-toggle{"aria-expanded" => "false", "aria-haspopup" => "true", "data-toggle" => "dropdown", :type => "button"}
+        %span.caret
+        %span.sr-only Toggle Dropdown
+      %ul.dropdown-menu
+        %li= link_to "Home", root_path
+        %li.divider{:role => "separator"}
+        %li= link_to "New Query", new_query_path
+        %li= link_to "New Dashboard", new_dashboard_path
+  %input#search.search.form-control{:placeholder => "Start typing a query or state", :style => "width: 300px; display: inline-block;", :type => "text"}/
+%table#checks.table
+  %thead
+    %tr
+      %th Query
+      %th{:style => "width: 10%;"} State
+      %th{:style => "width: 10%;"} Run
+      %th{:style => "width: 20%;"} Notify
+      %th{:style => "width: 15%;"}
+  %tbody
+    - @checks.each do |check|
+      %tr
+        %td
+          = link_to check.query.name, check.query
+          %span.text-muted= check.try(:check_type).to_s.gsub("_", " ")
+        %td
+          - if check.state
+            %small{:class => "check-state #{check.state.parameterize.gsub("-", "_")}"}= check.state.upcase
+        %td= check.schedule if check.respond_to?(:schedule)
+        %td
+          %ul.list-unstyled{:style => "margin-bottom: 0; word-break: break-all;"}
+            - check.split_emails.each do |email|
+              %li= email
+            - check.split_slack_channels.each do |channel|
+              %li= channel
+        %td{:style => "text-align: right; padding: 1px;"}
+          = link_to "Edit", edit_check_path(check), class: "btn btn-info"
+          = link_to "Run Now", query_path(check.query), class: "btn btn-primary"
+:javascript
+  $("#search").on("keyup", function() {
+    var value = $(this).val().toLowerCase()
+    $("#checks tbody tr").filter( function() {
+      $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+    })
+  }).focus()

@@ -13,7 +13,7 @@ module Blazer
 
     def blazer_format_value(key, value)
       if value.is_a?(Numeric) && !key.to_s.end_with?("id") && !key.to_s.start_with?("id")
-        number_with_delimiter(value)
+        number_with_delimiter(value, delimiter: ',', separator: '.')
       elsif value =~ BLAZER_URL_REGEX
         # see if image or link
         if Blazer.images && (key.include?("image") || BLAZER_IMAGE_EXT.include?(value.split(".").last.split("?").first.try(:downcase)))

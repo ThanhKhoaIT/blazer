@@ -1,0 +1,115 @@
+- blazer_title "Docs: #{@data_source.name}"
+%h1
+  Docs: #{@data_source.name}
+%hr/
+%h2 Smart Variables
+- if @smart_variables.any?
+  %p Use these variable names to get a dropdown of values.
+  %table.table{:style => "max-width: 500px;"}
+    %thead
+      %tr
+        %th Variable
+    %tbody
+      - @smart_variables.each do |k, _|
+        %tr
+          %td
+            %code
+              {#{k}}
+  %p
+    Use
+    %code {start_time}
+    and
+    %code {end_time}
+    for a date range selector. End a variable name with
+    %code _at
+    for a date selector.
+- else
+  %p
+    None set - add them in
+    = succeed "." do
+      %code config/blazer.yml
+%h2 Linked Columns
+- if @linked_columns.any?
+  %p Use these column names to link results to other pages.
+  %table.table{:style => "max-width: 500px;"}
+    %thead
+      %tr
+        %th{:style => "width: 20%;"} Name
+        %th URL
+    %tbody
+      - @linked_columns.each do |k, v|
+        %tr
+          %td= k
+          %td= v
+  %p Values that match the format of a URL will be linked automatically.
+- else
+  %p
+    None set - add them in
+    = succeed "." do
+      %code config/blazer.yml
+%h2 Smart Columns
+- if @smart_columns.any?
+  %p Use these column names to show additional data.
+  %table.table{:style => "max-width: 500px;"}
+    %thead
+      %tr
+        %th Name
+    %tbody
+      - @smart_columns.each do |k, _|
+        %tr
+          %td= k
+- else
+  %p
+    None set - add them in
+    = succeed "." do
+      %code config/blazer.yml
+%h2 Charts
+%p Use specific combinations of column types to generate charts.
+%table.table{:style => "max-width: 500px;"}
+  %thead
+    %tr
+      %th{:style => "width: 20%;"} Chart
+      %th Column Types
+  %tbody
+    %tr
+      %td Line
+      %td 2+ columns - timestamp, numeric(s)
+    %tr
+      %td Line
+      %td 3 columns - timestamp, string, numeric
+    %tr
+      %td Column
+      %td 2+ columns - string, numeric(s)
+    %tr
+      %td Column
+      %td 3 columns - string, string, numeric
+    %tr
+      %td Scatter
+      %td 2 columns - both numeric
+    %tr
+      %td Pie
+      %td
+        2 columns - string, numeric - and last column named
+        %code pie
+    %tr
+      %td Map
+      %td
+        Named
+        %code latitude
+        and
+        = succeed "," do
+          %code longitude
+        %code lat
+        and
+        = succeed "," do
+          %code lon
+        %code lat
+        and
+        %code lng
+        - if !blazer_maps?
+          %br/
+          %strong Needs configured
+%p
+  Use the column name
+  %code target
+  to draw a line for goals.

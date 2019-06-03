@@ -1,0 +1,19 @@
+!!!
+%html
+  %head
+    %meta{:content => "text/html; charset=UTF-8", "http-equiv" => "Content-Type"}/
+    %title= blazer_title ? blazer_title : "Blazer"
+    %meta{:charset => "utf-8"}/
+    = favicon_link_tag "blazer/favicon.png"
+    = stylesheet_link_tag "blazer/application"
+    = javascript_include_tag "blazer/application"
+    :javascript
+      #{blazer_js_var "rootPath", root_path}
+    %script{:crossorigin => "anonymous", :defer => "defer", :integrity => "sha384-DJ25uNYET2XCl5ZF++U8eNxPWqcKohUUBUpKGlNLMchM7q4Wjg2CUpjHLaL8yYPH", :src => "https://use.fontawesome.com/releases/v5.8.2/js/all.js"}
+    - if blazer_maps?
+      = stylesheet_link_tag "https://api.mapbox.com/mapbox.js/v3.1.1/mapbox.css", integrity: "sha384-o8tecBIfqi9yU5yYK2Ne/9A9hlOGFV9MBvCpmemvJH1XxqOe6h8Bl4mLxMi6PgjG", crossorigin: "anonymous"
+      = javascript_include_tag "https://api.mapbox.com/mapbox.js/v3.1.1/mapbox.js", integrity: "sha384-j81LqvtvYigFzGSUgAoFijpvoq4yGoCJSOXI9DFaUEpenR029MBE3E/X5Gr+WdO0", crossorigin: "anonymous"
+    = csrf_meta_tags
+  %body
+    .container
+      = yield

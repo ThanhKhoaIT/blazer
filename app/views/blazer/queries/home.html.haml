@@ -1,60 +1,41 @@
-<div id="queries">
-  <div id="header">
-    <div class="pull-right" style="line-height: 34px;">
-      <% if blazer_user %>
-        <div class='btn-group' style='margin-right: 20px;'>
-          <%= link_to "All", root_path, class: !params[:filter] ? 'active btn btn-default btn-xs' : 'btn btn-default btn-xs' %>
-          <% if Blazer.audit %>
-            <%= link_to "Viewed", root_path(filter: "viewed"), class: params[:filter] == "viewed" ? 'active btn btn-default btn-xs' : 'btn btn-default btn-xs' %>
-          <% end %>
-          <%= link_to "Mine", root_path(filter: "mine"), class: params[:filter] == "mine" ? 'active btn btn-default btn-xs' : 'btn btn-default btn-xs' %>
-        </div>
-      <% end %>
-      <div class='btn-group'>
-        <%= link_to "Checks", checks_path, class: 'btn btn-default' %>
-      </div>
-      <div class="btn-group">
-        <%= link_to "New Query", new_query_path, class: "btn btn-info" %>
-        <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <span class="caret"></span>
-          <span class="sr-only">Toggle Dropdown</span>
-        </button>
-        <ul class="dropdown-menu">
-          <li><%= link_to "Checks", checks_path %></li>
-          <li role="separator" class="divider"></li>
-          <li><%= link_to "New Dashboard", new_dashboard_path %></li>
-          <li><%= link_to "New Check", new_check_path %></li>
-        </ul>
-      </div>
-    </div>
-    <input type="text" v-model="searchTerm" placeholder="Start typing a query, dashboard, or person" style="width: 300px; display: inline-block;" v-focus class="search form-control" />
-  </div>
-
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th style="width: 20%; text-align: right;">Mastermind</th>
-      </tr>
-    </thead>
-    <tbody class="list" v-cloak>
-      <tr v-for="query in visibleItems">
-        <td>
-          <a :href="itemPath(query)" :class="{ dashboard: query.dashboard }">{{ query.name }}</a>
-          <span class="vars">{{ query.vars }}</span>
-        </td>
-        <td class="creator">{{ query.creator }}</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <p v-if="more" class="text-muted">Loading...</p>
-</div>
-
-<script>
-  <%= blazer_js_var "dashboards", @dashboards %>
-  <%= blazer_js_var "queries", @queries %>
-  <%= blazer_js_var "more", @more %>
+#queries
+  #header
+    .pull-right{:style => "line-height: 34px;"}
+      - if blazer_user
+        .btn-group{:style => "margin-right: 20px;"}
+          = link_to "All", root_path, class: !params[:filter] ? 'active btn btn-default btn-xs' : 'btn btn-default btn-xs'
+          - if Blazer.audit
+            = link_to "Viewed", root_path(filter: "viewed"), class: params[:filter] == "viewed" ? 'active btn btn-default btn-xs' : 'btn btn-default btn-xs'
+          = link_to "Mine", root_path(filter: "mine"), class: params[:filter] == "mine" ? 'active btn btn-default btn-xs' : 'btn btn-default btn-xs'
+      .btn-group
+        = link_to "Checks", checks_path, class: 'btn btn-default'
+      .btn-group
+        = link_to "New Query", new_query_path, class: "btn btn-info"
+        %button.btn.btn-info.dropdown-toggle{"aria-expanded" => "false", "aria-haspopup" => "true", "data-toggle" => "dropdown", :type => "button"}
+          %span.caret
+          %span.sr-only Toggle Dropdown
+        %ul.dropdown-menu
+          %li= link_to "Checks", checks_path
+          %li.divider{:role => "separator"}
+          %li= link_to "New Dashboard", new_dashboard_path
+          %li= link_to "New Check", new_check_path
+    %input.search.form-control{:placeholder => "Start typing a query, dashboard, or person", :style => "width: 300px; display: inline-block;", :type => "text", "v-focus" => "", "v-model" => "searchTerm"}/
+  %table.table
+    %thead
+      %tr
+        %th Name
+        %th{:style => "width: 20%; text-align: right;"} Mastermind
+    %tbody.list{"v-cloak" => ""}
+      %tr{"v-for" => "query in visibleItems"}
+        %td
+          %a{":class" => "{ dashboard: query.dashboard }", ":href" => "itemPath(query)"} {{ query.name }}
+          %span.vars {{ query.vars }}
+        %td.creator {{ query.creator }}
+  %p.text-muted{"v-if" => "more"} Loading...
+:javascript
+  #{blazer_js_var "dashboards", @dashboards}
+  #{blazer_js_var "queries", @queries}
+  #{blazer_js_var "more", @more}
 
   var prepareSearch = function (list) {
     var i, q, searchStr
@@ -158,4 +139,3 @@
       }
     }
   })
-</script>

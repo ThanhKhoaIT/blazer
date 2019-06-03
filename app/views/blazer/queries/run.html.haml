@@ -1,0 +1,153 @@
+- if @error
+  .alert.alert-danger= @error.first(200)
+- elsif !@success
+  - if @only_chart
+    %p.text-muted Select variables
+  - else
+    .alert.alert-info Can’t preview queries with variables...yet!
+- else
+  - unless @only_chart
+    - if @cached_at || @just_cached
+      %p.text-muted{style: "float: right;"}
+        - if @cached_at
+          Cached #{time_ago_in_words(@cached_at, include_seconds: true)} ago
+        - elsif !params[:data_source]
+          Cached just now
+          - if @data_source.cache_mode == "slow"
+            (over #{"%g" % @data_source.cache_slow_threshold}s)
+        - if @query && !params[:data_source]
+          = link_to "Refresh", refresh_query_path(@query, variable_params), method: :post
+  - if @forecast_error
+    .alert.alert-danger= @forecast_error
+  - if @rows.any?
+    - values = @rows.first
+    - chart_id = SecureRandom.hex
+    - column_types = @result.column_types
+    - chart_type = @result.chart_type
+    - chart_options = {id: chart_id}
+    - if ["line", "line2"].include?(chart_type)
+      - chart_options.merge!(min: nil)
+    - if chart_type == "scatter"
+      - chart_options.merge!(library: {tooltips: {intersect: false}})
+    - elsif ["bar", "bar2"].include?(chart_type)
+      - chart_options.merge!(library: {tooltips: {intersect: false, axis: 'x'}})
+    - elsif chart_type != "pie"
+      - if column_types.size == 2 || @forecast
+        - chart_options.merge!(library: {tooltips: {intersect: false, axis: 'x'}})
+      - else
+        - chart_options.merge!(library: {tooltips: {intersect: false}})
+    - series_library = {}
+    - target_index = @columns.index { |k| k.downcase == "target" }
+    - if target_index
+      - series_library[target_index - 1] = {pointStyle: "line", hitRadius: 5, borderColor: "#109618", pointBackgroundColor: "#109618", backgroundColor: "#109618"}
+    - if @forecast
+      - color = "#54a3ee"
+      - series_library[1] = {borderDash: [8], borderColor: color, pointBackgroundColor: color, backgroundColor: color, pointHoverBackgroundColor: color}
+    - if blazer_maps? && @markers.any?
+      #map{style: "height: #{@only_chart ? 300 : 500}px;"}
+      :javascript
+        L.mapbox.accessToken = '#{Blazer.mapbox_access_token}';
+        var map = L.mapbox.map('map', 'ankane.ioo8nki0');
+        #{blazer_js_var "markers", @markers}
+        var featureLayer = L.mapbox.featureLayer().addTo(map);
+        var geojson = [];
+        for (var i = 0; i < markers.length; i++) {
+          var marker = markers[i];
+          geojson.push({
+            type: 'Feature',
+            geometry: {
+              type: 'Point',
+              coordinates: [
+                marker.longitude,
+                marker.latitude
+              ]
+            },
+            properties: {
+              description: marker.title,
+              'marker-color': '#f86767',
+              'marker-size': 'medium'
+            }
+          });
+        }
+        featureLayer.setGeoJSON(geojson);
+        map.fitBounds(featureLayer.getBounds());
+    - elsif chart_type == "line"
+      - chart_data = @columns[1..-1].each_with_index.map{ |k, i| {name: blazer_series_name(k), data: @rows.map{ |r| [r[0], r[i + 1]] }, library: series_library[i]} }
+      = line_chart chart_data, chart_options
+    - elsif chart_type == "line2"
+      = line_chart @rows.group_by { |r| v = r[1]; (@boom[@columns[1]] || {})[v.to_s] || v }.each_with_index.map { |(name, v), i| {name: blazer_series_name(name), data: v.map { |v2| [v2[0], v2[2]] }, library: series_library[i]} }, chart_options
+    - elsif chart_type == "pie"
+      = pie_chart @rows.map { |r| [(@boom[@columns[0]] || {})[r[0].to_s] || r[0], r[1]] }, chart_options
+    - elsif chart_type == "bar"
+      = column_chart (values.size - 1).times.map { |i| name = @columns[i + 1]; {name: blazer_series_name(name), data: @rows.first(20).map { |r| [(@boom[@columns[0]] || {})[r[0].to_s] || r[0], r[i + 1]] } } }, chart_options
+    - elsif chart_type == "bar2"
+      - first_20 = @rows.group_by { |r| r[0] }.values.first(20).flatten(1)
+      - labels = first_20.map { |r| r[0] }.uniq
+      - series = first_20.map { |r| r[1] }.uniq
+      - labels.each do |l|
+        - series.each do |s|
+          - first_20 << [l, s, 0] unless first_20.find { |r| r[0] == l && r[1] == s }
+      = column_chart first_20.group_by { |r| v = r[1]; (@boom[@columns[1]] || {})[v.to_s] || v }.each_with_index.map { |(name, v), i| {name: blazer_series_name(name), data: v.sort_by { |r2| labels.index(r2[0]) }.map { |v2| v3 = v2[0]; [(@boom[@columns[0]] || {})[v3.to_s] || v3, v2[2]] }} }, chart_options
+    - elsif chart_type == "scatter"
+      = scatter_chart @rows, xtitle: @columns[0], ytitle: @columns[1], **chart_options
+    - elsif @only_chart
+      - if @rows.size == 1 && @rows.first.size == 1
+        - v = @rows.first.first
+        - if v.is_a?(String) && v == ""
+          .text-muted empty string
+        - else
+          %p{style: "font-size: 160px;"}= blazer_format_value(@columns.first, v)
+      - else
+        - @no_chart = true
+    - unless @only_chart && !@no_chart
+      - header_width = 100 / @columns.size.to_f
+      .results-container
+        - if @columns == ["QUERY PLAN"]
+          %pre
+            %code= @rows.map { |r| r[0] }.join("\n")
+        - elsif @columns == ["PLAN"] && @data_source.adapter == "druid"
+          %pre
+            %code= @rows[0][0]
+        - else
+          %p.text-muted{style: "margin-bottom: 10px; margin-top: 15px"}
+            = pluralize(@rows.size, "row")
+            - @checks.select(&:state).each do |check|
+              ·
+              %small{:class => "check-state #{check.state.parameterize.gsub("-", "_")}"}= link_to check.state.upcase, edit_check_path(check)
+              - if check.try(:message)
+                · #{check.message}
+            - if @query && @result.forecastable? && !params[:forecast]
+              ·
+              \#{link_to "Forecast", query_path(@query, {forecast: "t"}.merge(variable_params))}
+            %span.pull-right
+              - if @rows.size > 0
+                = link_to 'Copy to clipboard', '#results-table', class: 'click2CopyTable btn btn-xs btn-info'
+          .scroll-content
+            %table#results-table.table.results-table
+              %thead
+                %tr
+                  - @columns.each_with_index do |key, i|
+                    - type = @column_types[i]
+                    - summany_popup = type.in?(['float', 'int']) && !key.end_with?('id')
+                    %th{"data-popup" => summany_popup, "data-sort" => type, style: "width: #{header_width}%;"}
+                      %div{style: "min-width: #{@min_width_types.include?(i) ? 180 : 60}px;"}
+                        = key
+              %tbody
+                - @rows.each do |row|
+                  %tr
+                    - row.each_with_index do |v, i|
+                      - k = @columns[i]
+                      %td
+                        - if v.is_a?(Time)
+                          - v = blazer_time_value(@data_source, k, v)
+                        - unless v.nil?
+                          - if v.is_a?(String) && v == ""
+                            .text-muted empty string
+                          - elsif @linked_columns[k]
+                            = link_to blazer_format_value(k, v), @linked_columns[k].gsub("{value}", u(v.to_s)), target: "_blank"
+                          - else
+                            = blazer_format_value(k, v)
+                        - if v2 = (@boom[k] || {})[v.nil? ? v : v.to_s]
+                          .text-muted= v2
+  - else
+    %p.text-muted.text-center{style: "margin-top: 15px"} No rows

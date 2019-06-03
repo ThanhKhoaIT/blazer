@@ -1,0 +1,92 @@
+%small.text-muted
+  %h5
+    %i.far.fa-lightbulb
+    ProTip!
+    \#{link_to 'more...', docs_queries_path, target: :_blank, style: "float: right; font-weight: 200"}
+  %ul#proTip.list-unstyled
+    %li
+      %strong Command + S
+      to backup your SQL string.
+    %li
+      Set column name to
+      %strong *_date
+      to format DateTime to
+      %strong= Time.current.strftime('%Y/%m/%d')
+    %li
+      Set column name to
+      %strong *_time
+      to format DateTime to
+      %strong= Time.current.strftime('%H:%M')
+    - if @data_source.smart_variables.any?
+      - @data_source.smart_variables.keys.each do |key|
+        %li
+          %strong
+            %i.fas.fa-caret-square-down
+          Use
+          %code
+            {#{key}}
+          to get a dropdown of values.
+      %li
+        %strong
+          %i.fas.fa-caret-square-down
+        Use
+        %code {start_time}
+        and
+        %code {end_time}
+        for a date range selector.
+      %li
+        %strong
+          %i.fas.fa-caret-square-down
+        End a variable name with
+        %code _at
+        for a date selector.
+    %li
+      %strong
+        %i.fas.fa-chart-line
+        Chart:
+      2+ columns - timestamp, numeric(s)
+    %li
+      %strong
+        %i.fas.fa-chart-line
+        Chart:
+      3 columns - timestamp, string, numeric
+    %li
+      %strong
+        %i.far.fa-chart-bar
+        Chart:
+      2+ columns - string, numeric(s)
+    %li
+      %strong
+        %i.far.fa-chart-bar
+        Chart:
+      3 columns - string, string, numeric
+    %li
+      %strong Scatter Chart:
+      2 columns - both numeric
+    %li
+      %strong
+        %i.fas.fa-chart-pie
+        Chart:
+      2 columns - string, numeric - and last column named
+      %code pie
+    %li
+      %strong
+        %i.fas.fa-globe-americas
+        Chart:
+      Named
+      %code latitude
+      and
+      = succeed "," do
+        %code longitude
+      %code lat
+      and
+      = succeed "," do
+        %code lon
+      %code lat
+      and
+      %code lng
+    %ul
+:javascript
+  var itemCount = $('ul#proTip li').length;
+  var showIndex = Math.floor(Math.random() * Math.floor(itemCount)) + 1;
+  $("ul#proTip li:nth-child(" + showIndex + ")").show();

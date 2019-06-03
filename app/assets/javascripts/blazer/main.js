@@ -19,19 +19,20 @@ $(document).on("click", "a.click2CopyTable", function (event) {
   copyToClipboard(selector)
 })
 
-$(document).on("mouseover", "table th[data-popup='true']", function (event) {
+$(document).on("mouseover", "table th[data-popup]", function (event) {
   var sum = 0, numbers = [];
   var columns = $(this).parents('thead').find('th');
   var columnIndex = columns.index(this) + 1;
   var cells = $(this).parents('table').find('tbody tr td:nth-child('+columnIndex+')');
   cells.each(function(index, cell) {
     content = $(cell).text();
-    content = content.split('.').join('').replace(',', '.');
+    content = content.split(',').join('');
     float = parseFloat(content);
     if (isNaN(float)) float = 0;
     numbers.push(float);
     sum += float
   });
+  sum = parseFloat(sum.toFixed(2));
   showTooltip({
     el: this,
     min: Math.min.apply(null, numbers),
@@ -42,7 +43,7 @@ $(document).on("mouseover", "table th[data-popup='true']", function (event) {
   })
 })
 
-$(document).on("mouseleave", "table th[data-popup='true']", function (event) {
+$(document).on("mouseleave", "table th[data-popup]", function (event) {
   $('#summanyPopup').remove();
 })
 
