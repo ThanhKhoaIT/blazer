@@ -120,8 +120,14 @@
               ·
               \#{link_to "Forecast", query_path(@query, {forecast: "t"}.merge(variable_params))}
             %span.pull-right
-              - if @rows.size > 0
+              - if (1..preview_rows_number).cover?(@rows.size)
                 = link_to 'Copy to clipboard', '#results-table', class: 'click2CopyTable btn btn-xs btn-info'
+
+          - if @rows.size > preview_rows_number
+            %hr
+            %h4.text-center.text-info
+              %strong Notice: Now we show maximum is #{preview_rows_number} rows for preview
+            %hr
           .scroll-content
             %table#results-table.table.results-table
               %thead
@@ -133,7 +139,7 @@
                       %div{style: "min-width: #{@min_width_types.include?(i) ? 180 : 60}px;"}
                         = key
               %tbody
-                - @rows.each do |row|
+                - @rows.first(preview_rows_number).each do |row|
                   %tr
                     - row.each_with_index do |v, i|
                       - k = @columns[i]
