@@ -392,5 +392,10 @@ module Blazer
       def blazer_run_id
         params[:run_id].to_s.gsub(/[^a-z0-9\-]/i, "")
       end
+
+      def preview_rows_number
+        Blazer.settings['preview_rows_number'] || 365
+      end
+      helper_method :preview_rows_number
   end
 end

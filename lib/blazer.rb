@@ -42,6 +42,7 @@ module Blazer
     attr_accessor :before_action
     attr_accessor :from_email
     attr_accessor :host
+    attr_accessor :preview_rows_number
     attr_accessor :cache
     attr_accessor :transform_statement
     attr_accessor :transform_variable
@@ -58,12 +59,14 @@ module Blazer
     attr_accessor :slack_webhook_url
     attr_accessor :query_creatable
   end
+
   self.audit = true
   self.user_name = :name
   self.check_schedules = ["5 minutes", "1 hour", "1 day"]
   self.mapbox_access_token = nil
   self.assignees = []
   self.host = nil
+  self.preview_rows_number = 365
   self.anomaly_checks = false
   self.forecasting = false
   self.async = false
