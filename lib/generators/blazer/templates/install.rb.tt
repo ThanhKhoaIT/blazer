@@ -7,6 +7,8 @@ class <%= migration_class_name %> < ActiveRecord::Migration<%= migration_version
       t.text :statement
       t.string :data_source
       t.string :assignee_ids
+      t.string :team_ids
+      t.text :integration
       t.timestamps null: false
     end
 

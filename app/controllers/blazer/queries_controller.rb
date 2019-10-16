@@ -85,6 +85,7 @@ module Blazer
 
     def run
       @statement = params[:statement]
+      @integration = params[:integration]
       data_source = params[:data_source]
       process_vars(@statement, data_source)
       @only_chart = params[:only_chart]
@@ -139,9 +140,9 @@ module Blazer
 
         if @result
           @data_source.delete_results(@run_id) if @run_id
-
-          @columns = @result.columns
-          @rows = @result.rows
+          @integration_output = Blazer::RunIntegration.new(@result, @integration).call
+          @columns = @integration_output.dig(:columns) || @result.columns
+          @rows = @integration_output.dig(:rows) || @result.rows
           @error = @result.error
           @cached_at = @result.cached_at
           @just_cached = @result.just_cached

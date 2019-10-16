@@ -26,15 +26,15 @@
 %ul.nav.nav-tabs
   %li#chart-tab.active= link_to 'Chart', '#chart', data: { toggle: :tab }
   %li= link_to 'Query', '#query', data: { toggle: :tab }
-  -# %li= link_to 'Integration', '#integration', data: { toggle: :tab }
+  %li= link_to 'Integration', '#integration', data: { toggle: :tab }
   %li= link_to 'Table', '#table', data: { toggle: :tab }, id: 'table-tab'
 .tab-content
   #chart.tab-pane.fade.in.active
   #query.tab-pane.fade
     %pre#code
       %code= @statement.gsub("\r", "\n")
-  -# #integration.tab-pane.fade
-  -#   = @query.integration
+  #integration.tab-pane.fade
+    = @query.integration
   #table.tab-pane.fade
     - if @success
       #results

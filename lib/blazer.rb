@@ -12,6 +12,7 @@ require "blazer/data_source"
 require "blazer/result"
 require "blazer/excel_parser"
 require "blazer/run_statement"
+require "blazer/run_integration"
 
 # adapters
 require "blazer/adapters/base_adapter"

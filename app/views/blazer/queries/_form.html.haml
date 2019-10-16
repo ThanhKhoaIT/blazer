@@ -7,17 +7,22 @@
         .form-group
           = f.hidden_field :statement
           #editor-container
-            #editor{":style" => "{ height: editorHeight }"}= @query.statement.gsub("\n", '')
-        .form-group.text-right{:style => "margin-bottom: 8px;"}
-          .pull-left{:style => "margin-top: 8px;"}
+            #editor{style: "{ height: editorHeight }"}= @query.statement.to_s.gsub("\n", '')
+        .form-group.text-right{style: "margin-bottom: 8px;"}
+          .pull-left{style: "margin-top: 8px;"}
             = link_to "Back", :back
-            %a{":href" => "schemaPath", :style => "margin-left: 40px;", :target => "_blank"} Schema
+            = link_to 'Schema', 'schemaPath', style: 'margin-left: 40px;', target: :blank
+            = link_to 'Integration', '#integration-session', style: 'margin-left: 40px;', data: { toggle: :collapse }
           = f.select :data_source, Blazer.data_sources.values.select { |ds| q = @query.dup; q.data_source = ds.id; q.editable?(blazer_user) }.map { |ds| [ds.name, ds.id] }, {}, class: ("hide" if Blazer.data_sources.size <= 1), style: "width: 140px;"
-          #tables{:style => "display: inline-block; width: 250px; margin-right: 10px;"}
-            %select#table_names{:placeholder => "Preview table", :style => "width: 240px;"}
-          %a.btn.btn-info{:style => "vertical-align: top; width: 70px;", "v-if" => "!running", "v-on:click" => "run"} Run
-          %a.btn.btn-danger{:style => "vertical-align: top; width: 70px;", "v-if" => "running", "v-on:click" => "cancel"} Cancel
-        %hr/
+          #tables{style: "display: inline-block; width: 250px; margin-right: 10px;"}
+            %select#table_names{placeholder: "Preview table", style: "width: 240px;"}
+          %a.btn.btn-info{style: "vertical-align: top; width: 70px;", "v-if" => "!running", "v-on:click" => "run"} Run
+          %a.btn.btn-danger{style: "vertical-align: top; width: 70px;", "v-if" => "running", "v-on:click" => "cancel"} Cancel
+        #integration-session.collapse
+          %hr
+          = f.hidden_field :integration
+          #integration-editor{style: 'height: 200px'}
+        %hr
         = render partial: "tips"
       .col-xs-4
         .form-group
@@ -52,6 +57,7 @@
   #results
     %p.text-muted{"v-if" => "running"} Loading...
     #results-html{":class" => "{ 'query-error': error }", "v-if" => "!running"}
+
 :javascript
   #{blazer_js_var "params", variable_params}
   #{blazer_js_var "previewStatement", Hash[Blazer.data_sources.map { |k, v| [k, (v.preview_statement rescue "")] }]}
@@ -81,7 +87,11 @@
         this.error = false
         cancelAllQueries()
 
-        var data = $.extend({}, params, {statement: this.getSQL(), data_source: $("#query_data_source").val()})
+        var data = $.extend({}, params, {
+          statement: this.getSQL(),
+          integration: $('#integration').val(),
+          data_source: $("#query_data_source").val()
+        })
 
         var _this = this
 
@@ -128,8 +138,24 @@
       showEditor: function() {
         var _this = this
 
+        integrationEditor = ace.edit("integration-editor")
+        integrationEditor.setTheme("ace/theme/ambiance")
+        integrationEditor.getSession().setMode("ace/mode/ruby")
+        integrationEditor.setOptions({
+          fontSize: 12,
+          minLines: 10,
+          enableSnippets: false,
+          highlightActiveLine: false,
+          enableLiveAutocompletion: true,
+          enableBasicAutocompletion: true
+        })
+        integrationEditor.renderer.setShowGutter(true)
+        integrationEditor.renderer.setPrintMarginColumn(false)
+        integrationEditor.renderer.setPadding(10)
+        integrationEditor.getSession().setUseWrapMode(true)
+
         editor = ace.edit("editor")
-        editor.setTheme("ace/theme/twilight")
+        editor.setTheme("ace/theme/ambiance")
         editor.getSession().setMode("ace/mode/sql")
         editor.setOptions({
           fontSize: 12,
