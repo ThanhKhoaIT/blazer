@@ -2,7 +2,7 @@ module Blazer
   class QueriesController < BaseController
     before_action :set_query, only: [:show, :edit, :update, :destroy, :refresh]
     before_action :set_data_source, only: [:new, :edit, :tables, :docs, :schema, :cancel, :columns]
-    before_action :set_assignees, only: [:new, :create, :show, :edit, :update, :destroy, :refresh]
+    before_action :set_accessible, only: [:new, :create, :show, :edit, :update, :destroy, :refresh]
 
     def home
       set_queries(1000)
@@ -223,179 +223,189 @@ module Blazer
 
     private
 
-      def set_data_source
-        @data_source = Blazer.data_sources[params[:data_source]]
+    def set_data_source
+      @data_source = Blazer.data_sources[params[:data_source]]
+      render_forbidden unless Query.new(data_source: @data_source.id).editable?(blazer_user)
+    end
 
-        unless Query.new(data_source: @data_source.id).editable?(blazer_user)
-          render_forbidden
-        end
-      end
+    def continue_run
+      render json: {run_id: @run_id, timestamp: @timestamp}, status: :accepted
+    end
 
-      def continue_run
-        render json: {run_id: @run_id, timestamp: @timestamp}, status: :accepted
-      end
+    def render_run
+      @checks = @query ? @query.checks.order(:id) : []
 
-      def render_run
-        @checks = @query ? @query.checks.order(:id) : []
-
-        @first_row = @rows.first || []
-        @column_types = []
-        if @rows.any?
-          @columns.each_with_index do |_, i|
-            @column_types << (
-              case @first_row[i]
-              when Integer
-                "int"
-              when Float, BigDecimal
-                "float"
-              else
-                "string-ins"
-              end
-            )
+      @first_row = @rows.first || []
+      @column_types = []
+      if @rows.any?
+        @columns.each_with_index do |_, i|
+          @column_types << (
+            case @first_row[i]
+          when Integer
+            "int"
+          when Float, BigDecimal
+            "float"
+          else
+            "string-ins"
           end
-        end
-
-        @filename = @query.name.parameterize if @query
-        @min_width_types = @columns.each_with_index.select { |c, i| @first_row[i].is_a?(Time) || @first_row[i].is_a?(String) || @data_source.smart_columns[c] }.map(&:last)
-
-        @boom = @result.boom if @result
-
-        @linked_columns = @data_source.linked_columns
-
-        @markers = []
-        [["latitude", "longitude"], ["lat", "lon"], ["lat", "lng"]].each do |keys|
-          lat_index = @columns.index(keys.first)
-          lon_index = @columns.index(keys.last)
-          if lat_index && lon_index
-            @markers =
-              @rows.select do |r|
-                r[lat_index] && r[lon_index]
-              end.map do |r|
-                {
-                  title: r.each_with_index.map{ |v, i| i == lat_index || i == lon_index ? nil : "<strong>#{@columns[i]}:</strong> #{v}" }.compact.join("<br />").truncate(140),
-                  latitude: r[lat_index],
-                  longitude: r[lon_index]
-                }
-              end
-          end
-        end
-
-        filename = @query.try(:name).try(:parameterize).presence || 'query'
-        respond_to do |format|
-          format.html do
-            render layout: false
-          end
-          format.xlsx do
-            parser = ::Blazer::ExcelParser.new(@query, @columns, @rows)
-            tmp_file = parser.export
-            send_file tmp_file, type: "application/xlsx; charset=utf-8; header=present", disposition: "attachment; filename=\"#{parser.filename}\""
-          end
-          format.csv do
-            send_data csv_data(@columns, @rows, @data_source), type: "text/csv; charset=utf-8; header=present", disposition: "attachment; filename=\"#{filename}.csv\""
-          end
+          )
         end
       end
 
-      def set_queries(limit = nil)
-        @queries = Blazer::Query.named.select(:id, :name, :creator_id, :statement)
-        @queries = @queries.includes(:creator) if Blazer.user_class
+      @filename = @query.name.parameterize if @query
+      @min_width_types = @columns.each_with_index.select { |c, i| @first_row[i].is_a?(Time) || @first_row[i].is_a?(String) || @data_source.smart_columns[c] }.map(&:last)
 
-        if blazer_user && params[:filter] == "mine"
-          @queries = @queries.where(creator_id: blazer_user.id).reorder(updated_at: :desc)
-        elsif blazer_user && params[:filter] == "viewed" && Blazer.audit
-          @queries = queries_by_ids(Blazer::Audit.where(user_id: blazer_user.id).order(created_at: :desc).limit(500).pluck(:query_id).uniq)
-        else
-          @queries = @queries.limit(limit) if limit
-          @queries = @queries.order(:name)
-        end
-        @queries = @queries.to_a
+      @boom = @result.boom if @result
 
-        @more = limit && @queries.size >= limit
+      @linked_columns = @data_source.linked_columns
 
-        @queries = @queries.select { |q| !q.name.to_s.start_with?("#") || q.try(:creator).try(:id) == blazer_user.try(:id) }
-
-        @queries =
-          @queries.map do |q|
-            {
-              id: q.id,
-              name: q.name,
-              creator: blazer_user && q.try(:creator) == blazer_user ? "You" : q.try(:creator).try(Blazer.user_name),
-              vars: q.variables.join(", "),
-              to_param: q.to_param
-            }
-          end
-      end
-
-      def queries_by_ids(favorite_query_ids)
-        queries = Blazer::Query.named.where(id: favorite_query_ids)
-        queries = queries.includes(:creator) if Blazer.user_class
-        queries = queries.index_by(&:id)
-        favorite_query_ids.map { |query_id| queries[query_id] }.compact
-      end
-
-      def set_query
-        @query = Blazer::Query.find(params[:id].to_s.split("-").first)
-
-        unless @query.viewable?(blazer_user)
-          render_forbidden
+      @markers = []
+      [["latitude", "longitude"], ["lat", "lon"], ["lat", "lng"]].each do |keys|
+        lat_index = @columns.index(keys.first)
+        lon_index = @columns.index(keys.last)
+        if lat_index && lon_index
+          @markers =
+            @rows.select do |r|
+              r[lat_index] && r[lon_index]
+            end.map do |r|
+              {
+                title: r.each_with_index.map{ |v, i| i == lat_index || i == lon_index ? nil : "<strong>#{@columns[i]}:</strong> #{v}" }.compact.join("<br />").truncate(140),
+                latitude: r[lat_index],
+                longitude: r[lon_index]
+              }
+            end
         end
       end
 
-      def set_assignees
-        if Blazer.settings.key?('assignees')
-          data_source = Blazer.data_sources[params[:data_source]]
-          statement = Blazer.settings['assignees']
-          @assignees = Rails.cache.fetch 'jarvis_assignees' do
-            (Blazer::RunStatement.new.perform(data_source, statement, {}).rows rescue [])
-          end
-        else
-          @assignees = []
+      filename = @query.try(:name).try(:parameterize).presence || 'query'
+      respond_to do |format|
+        format.html do
+          render layout: false
+        end
+        format.xlsx do
+          parser = ::Blazer::ExcelParser.new(@query, @columns, @rows)
+          tmp_file = parser.export
+          send_file tmp_file, type: "application/xlsx; charset=utf-8; header=present", disposition: "attachment; filename=\"#{parser.filename}\""
+        end
+        format.csv do
+          send_data csv_data(@columns, @rows, @data_source), type: "text/csv; charset=utf-8; header=present", disposition: "attachment; filename=\"#{filename}.csv\""
         end
       end
+    end
 
-      def render_forbidden
-        render plain: "Access denied", status: :forbidden
+    def set_queries(limit = nil)
+      @queries = Blazer::Query.named.select(:id, :name, :creator_id, :statement)
+      @queries = @queries.includes(:creator) if Blazer.user_class
+
+      if blazer_user && params[:filter] == "mine"
+        @queries = @queries.where(creator_id: blazer_user.id).reorder(updated_at: :desc)
+      elsif blazer_user && params[:filter] == "viewed" && Blazer.audit
+        @queries = queries_by_ids(Blazer::Audit.where(user_id: blazer_user.id).order(created_at: :desc).limit(500).pluck(:query_id).uniq)
+      else
+        @queries = @queries.limit(limit) if limit
+        @queries = @queries.order(:name)
       end
+      @queries = @queries.to_a
 
-      def query_params
-        params.require(:query).permit!
+      @more = limit && @queries.size >= limit
+
+      @queries = @queries.select { |q| !q.name.to_s.start_with?("#") || q.try(:creator).try(:id) == blazer_user.try(:id) }
+
+      @queries =
+        @queries.map do |q|
+          {
+            id: q.id,
+            name: q.name,
+            creator: blazer_user && q.try(:creator) == blazer_user ? "You" : q.try(:creator).try(Blazer.user_name),
+            vars: q.variables.join(", "),
+            to_param: q.to_param
+          }
+        end
+    end
+
+    def queries_by_ids(favorite_query_ids)
+      queries = Blazer::Query.named.where(id: favorite_query_ids)
+      queries = queries.includes(:creator) if Blazer.user_class
+      queries = queries.index_by(&:id)
+      favorite_query_ids.map { |query_id| queries[query_id] }.compact
+    end
+
+    def set_query
+      @query = Blazer::Query.find(params[:id].to_s.split("-").first)
+
+      unless @query.viewable?(blazer_user)
+        render_forbidden
       end
+    end
 
-      def blazer_params
-        params[:blazer] || {}
+    def set_accessible
+      @teams = Rails.cache.fetch('jarvis_teams') { get_teams } if Blazer.settings.key?('teams')
+      @assignees = Rails.cache.fetch('jarvis_assignees') { get_assignees } if Blazer.settings.key?('assignees')
+    ensure
+      @teams ||= []
+      @assignees ||= []
+    end
+
+    def get_assignees
+      Blazer::RunStatement.new.perform(@data_source, Blazer.settings['assignees'], {}).rows.map do |row|
+        [row.first, row.last.to_s.titleize]
       end
+    rescue
+      []
+    end
 
-      def csv_data(columns, rows, data_source)
-        CSV.generate do |csv|
-          csv << columns
-          rows.each do |row|
-            csv << row.each_with_index.map { |v, i| v.is_a?(Time) ? blazer_time_value(data_source, columns[i], v) : v }
-          end
+    def get_teams
+      Blazer::RunStatement.new.perform(@data_source, Blazer.settings['teams'], {}).rows.map do |row|
+        [row.first, row.last.to_s.titleize]
+      end
+    rescue
+      []
+    end
+
+    def render_forbidden
+      render plain: "Access denied", status: :forbidden
+    end
+
+    def query_params
+      params.require(:query).permit!
+    end
+
+    def blazer_params
+      params[:blazer] || {}
+    end
+
+    def csv_data(columns, rows, data_source)
+      CSV.generate do |csv|
+        csv << columns
+        rows.each do |row|
+          csv << row.each_with_index.map { |v, i| v.is_a?(Time) ? blazer_time_value(data_source, columns[i], v) : v }
         end
       end
+    end
 
-      def blazer_time_value(data_source, k, v)
-        if k.end_with?('_date')
-          v.in_time_zone(Blazer.time_zone).strftime("%Y/%m/%d")
-        elsif k.end_with?('_time')
-          v.in_time_zone(Blazer.time_zone).strftime("%H:%M")
-        elsif data_source.local_time_suffix.any? { |s| k.ends_with?(s) }
-          v.to_s.sub(" UTC", "")
-        else
-          v.in_time_zone(Blazer.time_zone)
-        end
-      rescue
-        return v
+    def blazer_time_value(data_source, k, v)
+      if k.end_with?('_date')
+        v.in_time_zone(Blazer.time_zone).strftime("%Y/%m/%d")
+      elsif k.end_with?('_time')
+        v.in_time_zone(Blazer.time_zone).strftime("%H:%M")
+      elsif data_source.local_time_suffix.any? { |s| k.ends_with?(s) }
+        v.to_s.sub(" UTC", "")
+      else
+        v.in_time_zone(Blazer.time_zone)
       end
-      helper_method :blazer_time_value
+    rescue
+      return v
+    end
+    helper_method :blazer_time_value
 
-      def blazer_run_id
-        params[:run_id].to_s.gsub(/[^a-z0-9\-]/i, "")
-      end
+    def blazer_run_id
+      params[:run_id].to_s.gsub(/[^a-z0-9\-]/i, "")
+    end
 
-      def preview_rows_number
-        Blazer.settings['preview_rows_number'] || 365
-      end
-      helper_method :preview_rows_number
+    def preview_rows_number
+      Blazer.settings['preview_rows_number'] || 365
+    end
+    helper_method :preview_rows_number
+
   end
 end

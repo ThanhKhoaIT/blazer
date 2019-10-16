@@ -175,7 +175,7 @@ input.search:focus {
 }
 
 #code {
-  max-height: 236px;
+  max-height: 80vh;
   overflow: hidden;
 }
 

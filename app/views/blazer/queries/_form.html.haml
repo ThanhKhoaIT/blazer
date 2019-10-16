@@ -7,7 +7,7 @@
         .form-group
           = f.hidden_field :statement
           #editor-container
-            #editor{":style" => "{ height: editorHeight }"}= @query.statement
+            #editor{":style" => "{ height: editorHeight }"}= @query.statement.gsub("\n", '')
         .form-group.text-right{:style => "margin-bottom: 8px;"}
           .pull-left{:style => "margin-top: 8px;"}
             = link_to "Back", :back
@@ -30,6 +30,10 @@
           .form-group
             = f.label :assignees
             = f.collection_select :assignee_ids, @assignees, :first, :last, {}, { placeholder: "Assignees", style: "height: 80px;", class: "form-control", multiple: true }
+        - if @teams.any?
+          .form-group
+            = f.label :teams
+            = f.collection_select :team_ids, @teams, :first, :last, {}, { placeholder: "Teams", style: "height: 80px;", class: "form-control", multiple: true }
         .form-group.text-right
           = f.submit "For Enter Press", class: "hide"
           - if @query.persisted?
@@ -292,7 +296,7 @@
   }
 
   $(document).ready(function() {
-    $('#query_assignee_ids').select2();
+    $('#query_assignee_ids, #query_team_ids').select2();
     setInterval(function() {
       var lastVersion = $('#query_statement').val();
       if (localStorage.getItem('lastVersion') !== lastVersion) {

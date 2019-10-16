@@ -1,6 +1,7 @@
 module Blazer
   class Query < Record
     serialize :assignee_ids, Array
+    serialize :team_ids, Array
 
     belongs_to :creator, Blazer::BELONGS_TO_OPTIONAL.merge(class_name: Blazer.user_class.to_s) if Blazer.user_class
     has_many :checks, dependent: :destroy
@@ -8,6 +9,7 @@ module Blazer
     has_many :dashboards, through: :dashboard_queries
     has_many :audits
 
+    before_validation :statement_format
     validates :statement, presence: true
 
     scope :named, -> { where("blazer_queries.name <> ''") }
@@ -42,5 +44,12 @@ module Blazer
     def variables
       Blazer.extract_vars(statement)
     end
+
+    private
+
+    def statement_format
+      self.statement.gsub!(/\n/, '')
+    end
+
   end
 end

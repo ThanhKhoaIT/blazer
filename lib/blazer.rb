@@ -49,6 +49,7 @@ module Blazer
     attr_accessor :check_schedules
     attr_accessor :mapbox_access_token
     attr_accessor :assignees
+    attr_accessor :teams
     attr_accessor :anomaly_checks
     attr_accessor :forecasting
     attr_accessor :async
@@ -65,6 +66,7 @@ module Blazer
   self.check_schedules = ["5 minutes", "1 hour", "1 day"]
   self.mapbox_access_token = nil
   self.assignees = []
+  self.teams = []
   self.host = nil
   self.preview_rows_number = 365
   self.anomaly_checks = false
