@@ -3,10 +3,8 @@
     #{blazer_js_var "timeZone", Blazer.time_zone.tzinfo.name}
     var now = moment.tz(timeZone)
     var format = "YYYY-MM-DD"
+    function toDate(time) { return moment.tz(time.format(format), timeZone) }
 
-    function toDate(time) {
-      return moment.tz(time.format(format), timeZone)
-    }
   %form#bind.form-inline{:action => action, :method => "get", :style => "margin-bottom: 15px;"}
     - date_vars = ["start_time", "end_time"]
     - if (date_vars - @bind_vars).empty?
@@ -16,7 +14,7 @@
     - @bind_vars.each_with_index do |var, i|
       = label_tag var, var
       - if (data = @smart_vars[var])
-        = select_tag var, options_for_select([[nil, nil]] + data, selected: params[var]), style: "margin-right: 20px; width: 200px; display: none;", multiple: true
+        = select_tag var, options_for_select(data, selected: params[var]), style: "margin-right: 20px; width: 200px; display: none;", multiple: true
         :javascript
           $("##{var}").selectize({
             create: true
