@@ -68,7 +68,7 @@
             %code= @rows[0][0]
         - else
           %p.text-muted{style: "margin-bottom: 10px; margin-top: 15px"}
-            = pluralize(@rows.size, "row")
+            = "#{@rows.size} rows" if @rows.size > 1
             - @checks.select(&:state).each do |check|
               ·
               %small{:class => "check-state #{check.state.parameterize.gsub("-", "_")}"}= link_to check.state.upcase, edit_check_path(check)

@@ -12,16 +12,18 @@
           .pull-left{style: "margin-top: 8px;"}
             = link_to "Back", :back
             = link_to 'Schema', 'schemaPath', style: 'margin-left: 40px;', target: :blank
-            = link_to 'Integration', '#integration-session', style: 'margin-left: 40px;', data: { toggle: :collapse }
+            - if Blazer.integration
+              = link_to 'Integration', '#integration-session', style: 'margin-left: 40px;', data: { toggle: :collapse }
           = f.select :data_source, Blazer.data_sources.values.select { |ds| q = @query.dup; q.data_source = ds.id; q.editable?(blazer_user) }.map { |ds| [ds.name, ds.id] }, {}, class: ("hide" if Blazer.data_sources.size <= 1), style: "width: 140px;"
           #tables{style: "display: inline-block; width: 250px; margin-right: 10px;"}
             %select#table_names{placeholder: "Preview table", style: "width: 240px;"}
           %a.btn.btn-info{style: "vertical-align: top; width: 70px;", "v-if" => "!running", "v-on:click" => "run"} Run
           %a.btn.btn-danger{style: "vertical-align: top; width: 70px;", "v-if" => "running", "v-on:click" => "cancel"} Cancel
-        #integration-session.collapse
-          %hr
-          = f.hidden_field :integration
-          #integration-editor{style: 'height: 200px'}
+        - if Blazer.integration
+          #integration-session.collapse
+            %hr
+            = f.hidden_field :integration
+            #integration-editor{style: 'height: 200px'}
         %hr
         = render partial: "tips"
       .col-xs-4
@@ -135,11 +137,9 @@
           selectize.refreshOptions(false)
         })
       },
-      showEditor: function() {
-        var _this = this
-
+      showIntegrationEditor: function() {
         integrationEditor = ace.edit("integration-editor")
-        integrationEditor.setTheme("ace/theme/ambiance")
+        integrationEditor.setTheme("ace/theme/twilight")
         integrationEditor.getSession().setMode("ace/mode/ruby")
         integrationEditor.setOptions({
           fontSize: 12,
@@ -153,9 +153,11 @@
         integrationEditor.renderer.setPrintMarginColumn(false)
         integrationEditor.renderer.setPadding(10)
         integrationEditor.getSession().setUseWrapMode(true)
-
+      },
+      showEditor: function() {
+        var _this = this
         editor = ace.edit("editor")
-        editor.setTheme("ace/theme/ambiance")
+        editor.setTheme("ace/theme/twilight")
         editor.getSession().setMode("ace/mode/sql")
         editor.setOptions({
           fontSize: 12,
@@ -308,6 +310,7 @@
       })
 
       this.showEditor()
+      this.showIntegrationEditor()
     }
   })
 

@@ -25,16 +25,19 @@
 
 %ul.nav.nav-tabs
   %li#chart-tab.active= link_to 'Chart', '#chart', data: { toggle: :tab }
-  %li= link_to 'Query', '#query', data: { toggle: :tab }
-  %li= link_to 'Integration', '#integration', data: { toggle: :tab }
   %li= link_to 'Table', '#table', data: { toggle: :tab }, id: 'table-tab'
+  %li= link_to 'Query', '#query', data: { toggle: :tab }
+  - if @query.integration.present?
+    %li= link_to 'Integration', '#integration', data: { toggle: :tab }
+
 .tab-content
   #chart.tab-pane.fade.in.active
   #query.tab-pane.fade
     %pre#code
       %code= @statement.gsub("\r", "\n")
-  #integration.tab-pane.fade
-    = @query.integration
+  - if @query.integration.present?
+    #integration.tab-pane.fade
+      = @query.integration
   #table.tab-pane.fade
     - if @success
       #results
@@ -61,3 +64,10 @@
         if ($("code").text().length < 10000) {
           hljs.highlightBlock(document.getElementById("code"));
         }
+
+:javascript
+  $('ul.nav.nav-tabs li a').click(function(event) {
+    localStorage.setItem('currentQueryTab', $(event.currentTarget).attr('href'));
+  });
+  var currentQueryTab = localStorage.getItem('currentQueryTab');
+  $("ul.nav.nav-tabs li a[href='" + currentQueryTab + "']").click();

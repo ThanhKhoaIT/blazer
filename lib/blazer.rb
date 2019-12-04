@@ -54,6 +54,7 @@ module Blazer
     attr_accessor :anomaly_checks
     attr_accessor :forecasting
     attr_accessor :async
+    attr_accessor :integration
     attr_accessor :images
     attr_accessor :query_viewable
     attr_accessor :query_editable
@@ -90,6 +91,11 @@ module Blazer
 
   def self.time_zone=(time_zone)
     @time_zone = time_zone.is_a?(ActiveSupport::TimeZone) ? time_zone : ActiveSupport::TimeZone[time_zone.to_s]
+  end
+
+  def self.integration
+    return @integration if defined?(@integration)
+    @integration = settings.key?("integration") ? settings["integration"] : false
   end
 
   def self.user_class
