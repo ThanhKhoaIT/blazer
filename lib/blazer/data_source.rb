@@ -37,6 +37,10 @@ module Blazer
       settings["variable_defaults"] || {}
     end
 
+    def select_all_variables
+      settings["select_all_variables"] || {}
+    end
+
     def timeout
       settings["timeout"]
     end

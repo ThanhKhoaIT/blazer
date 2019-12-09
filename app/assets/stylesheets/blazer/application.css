@@ -61,7 +61,7 @@ input.search:focus {
   margin-right: 0;
 }
 
-#editor-container {
+#editor-container, #integration-editor {
   background-color: #141414;
   padding-top: 10px;
   padding-bottom: 10px;
@@ -175,7 +175,7 @@ input.search:focus {
 }
 
 #code {
-  max-height: 236px;
+  max-height: 80vh;
   overflow: hidden;
 }
 

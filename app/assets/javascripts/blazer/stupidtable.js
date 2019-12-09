@@ -32,6 +32,8 @@
   $.fn.stupidtable.dir = {ASC: "asc", DESC: "desc"};
   $.fn.stupidtable.default_sort_fns = {
     "int": function(a, b) {
+      a = a.replace(',', '');
+      b = b.replace(',', '');
       return parseInt(a, 10) - parseInt(b, 10);
     },
     "float": function(a, b) {

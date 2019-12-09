@@ -31,7 +31,7 @@ module Blazer
     end
 
     def save_file!
-      tmp_file = "tmp/#{filename}"
+      tmp_file = Tempfile.new(filename).path
       excel.serialize(tmp_file)
       return tmp_file
     end

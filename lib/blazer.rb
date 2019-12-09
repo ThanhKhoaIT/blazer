@@ -12,6 +12,7 @@ require "blazer/data_source"
 require "blazer/result"
 require "blazer/excel_parser"
 require "blazer/run_statement"
+require "blazer/run_integration"
 
 # adapters
 require "blazer/adapters/base_adapter"
@@ -49,9 +50,11 @@ module Blazer
     attr_accessor :check_schedules
     attr_accessor :mapbox_access_token
     attr_accessor :assignees
+    attr_accessor :teams
     attr_accessor :anomaly_checks
     attr_accessor :forecasting
     attr_accessor :async
+    attr_accessor :integration
     attr_accessor :images
     attr_accessor :query_viewable
     attr_accessor :query_editable
@@ -65,6 +68,7 @@ module Blazer
   self.check_schedules = ["5 minutes", "1 hour", "1 day"]
   self.mapbox_access_token = nil
   self.assignees = []
+  self.teams = []
   self.host = nil
   self.preview_rows_number = 365
   self.anomaly_checks = false
@@ -87,6 +91,11 @@ module Blazer
 
   def self.time_zone=(time_zone)
     @time_zone = time_zone.is_a?(ActiveSupport::TimeZone) ? time_zone : ActiveSupport::TimeZone[time_zone.to_s]
+  end
+
+  def self.integration
+    return @integration if defined?(@integration)
+    @integration = settings.key?("integration") ? settings["integration"] : false
   end
 
   def self.user_class

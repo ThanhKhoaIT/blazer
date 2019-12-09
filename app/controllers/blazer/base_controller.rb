@@ -65,7 +65,11 @@ module Blazer
             end
             value = Blazer.transform_variable.call(var, value) if Blazer.transform_variable
             if value.is_a?(Array)
-              var_value = value.map{|v| ActiveRecord::Base.connection.quote(v)}.join(', ')
+              if value.include?('select-all')
+                var_value = Blazer.data_sources[data_source].select_all_variables[var]
+              else
+                var_value = value.map{|v| ActiveRecord::Base.connection.quote(v)}.join(', ')
+              end
             else
               var_value = ActiveRecord::Base.connection.quote(value)
             end
@@ -76,7 +80,9 @@ module Blazer
 
       def parse_smart_variables(var, data_source)
         smart_var_data_source =
-          ([data_source] + Array(data_source.settings["inherit_smart_settings"]).map { |ds| Blazer.data_sources[ds] }).find { |ds| ds.smart_variables[var] }
+          ([data_source] + Array(data_source.settings["inherit_smart_settings"])
+          .map { |ds| Blazer.data_sources[ds] })
+          .find { |ds| ds.smart_variables[var] }
 
         if smart_var_data_source
           query = smart_var_data_source.smart_variables[var]
@@ -88,6 +94,9 @@ module Blazer
           elsif query
             result = smart_var_data_source.run_statement(query)
             smart_var = result.rows.map { |v| v.reverse }
+            if data_source.select_all_variables.keys.include?(var)
+              smart_var = [['All', 'select-all']] + smart_var
+            end
             error = result.error if result.error
           end
         end

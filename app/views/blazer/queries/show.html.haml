@@ -4,7 +4,7 @@
     .row{:style => "padding-top: 13px;"}
       .col-sm-8
         = render partial: "blazer/nav"
-        %h3{:style => "line-height: 34px; display: inline; margin-left: 5px;"}
+        %h4{style: "line-height: 34px; display: inline; margin-left: 5px;"}
           = @query.name
       .col-sm-4.text-right
         = link_to "Edit", edit_query_path(@query, variable_params), class: "btn btn-default", disabled: !@query.editable?(blazer_user)
@@ -20,31 +20,54 @@
         %li= message
 - if @query.description.present?
   %p= @query.description
+
 = render partial: "blazer/variables", locals: {action: query_path(@query)}
-%pre#code
-  %code= @statement
-- if @success
-  #results
-    %p.text-muted Loading...
-  :javascript
-    function showRun(data) {
-      $("#results").html(data);
-      $("#results table").stupidtable().stickyTableHeaders({
-        fixedOffset: 60,
-      });
-    }
 
-    function showError(message) {
-      $("#results").addClass("query-error").html(message);
-    }
+%ul.nav.nav-tabs
+  %li#chart-tab.active= link_to 'Chart', '#chart', data: { toggle: :tab }
+  %li= link_to 'Table', '#table', data: { toggle: :tab }, id: 'table-tab'
+  %li= link_to 'Query', '#query', data: { toggle: :tab }
+  - if @query.integration.present?
+    %li= link_to 'Integration', '#integration', data: { toggle: :tab }
 
-    #{blazer_js_var "data", variable_params.merge(statement: @statement, query_id: @query.id, data_source: @query.data_source)}
+.tab-content
+  #chart.tab-pane.fade.in.active
+  #query.tab-pane.fade
+    %pre#code
+      %code= @statement.gsub("\r", "\n")
+  - if @query.integration.present?
+    #integration.tab-pane.fade
+      = @query.integration
+  #table.tab-pane.fade
+    - if @success
+      #results
+        %p.text-muted Loading...
+      :javascript
+        function showRun(data) {
+          $("#results").html(data);
+          $("#results table").stupidtable().stickyTableHeaders({
+            fixedOffset: 60,
+          });
+        }
 
-    runQuery(data, showRun, showError)
-- unless %w(mongodb).include?(Blazer.data_sources[@query.data_source].adapter)
-  :javascript
-    // do not highlight really long queries
-    // this can lead to performance issues
-    if ($("code").text().length < 10000) {
-      hljs.highlightBlock(document.getElementById("code"));
-    }
+        function showError(message) {
+          $("#results").addClass("query-error").html(message);
+        }
+
+        #{blazer_js_var "data", variable_params.merge(statement: @statement, query_id: @query.id, data_source: @query.data_source)}
+
+        runQuery(data, showRun, showError)
+    - unless %w(mongodb).include?(Blazer.data_sources[@query.data_source].adapter)
+      :javascript
+        // do not highlight really long queries
+        // this can lead to performance issues
+        if ($("code").text().length < 10000) {
+          hljs.highlightBlock(document.getElementById("code"));
+        }
+
+:javascript
+  $('ul.nav.nav-tabs li a').click(function(event) {
+    localStorage.setItem('currentQueryTab', $(event.currentTarget).attr('href'));
+  });
+  var currentQueryTab = localStorage.getItem('currentQueryTab');
+  $("ul.nav.nav-tabs li a[href='" + currentQueryTab + "']").click();
