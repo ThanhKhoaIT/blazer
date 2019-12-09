@@ -18,6 +18,14 @@ body {
   padding-bottom: 15px;
 }
 
+#results-table th {
+  max-width: 200px;
+}
+
+#results-table td {
+  word-break: break-word;
+}
+
 .results-table th {
   cursor: pointer;
 }
@@ -237,4 +245,8 @@ h2 {
 
 ul#proTip li {
   display: none;
+}
+
+.container-fluid {
+  padding: 0px 60px;
 }

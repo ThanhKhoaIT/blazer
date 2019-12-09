@@ -17,17 +17,18 @@
   = render partial: "blazer/variables", locals: {action: dashboard_path(@dashboard)}
 - else
   %div{:style => "padding-bottom: 15px;"}
-- @queries.each_with_index do |query, i|
-  .chart-container
-    %h4= link_to query.friendly_name, query_path(query, variable_params), target: "_blank"
-    .chart{:id => "chart-#{i}"}
-      %p.text-muted Loading...
-  :javascript
-    #{blazer_js_var "data", {statement: query.statement, query_id: query.id, data_source: query.data_source, only_chart: true}}
+.dashboard
+  - @queries.each_with_index do |query, i|
+    .chart-container
+      %h4= link_to query.friendly_name, query_path(query, variable_params), target: "_blank"
+      .chart{:id => "chart-#{i}"}
+        %p.text-muted Loading...
+    :javascript
+      #{blazer_js_var "data", {statement: query.statement, query_id: query.id, data_source: query.data_source, only_chart: true}}
 
-    runQuery(data, function (data) {
-      $("#chart-#{i}").html(data)
-      $("#chart-#{i} table").stupidtable()
-    }, function (message) {
-      $("#chart-#{i}").addClass("query-error").html(message)
-    });
+      runQuery(data, function (data) {
+        $("#chart-#{i}").html(data)
+        $("#chart-#{i} table").stupidtable()
+      }, function (message) {
+        $("#chart-#{i}").addClass("query-error").html(message)
+      });

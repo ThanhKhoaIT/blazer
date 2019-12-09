@@ -138,21 +138,23 @@
         })
       },
       showIntegrationEditor: function() {
-        integrationEditor = ace.edit("integration-editor")
-        integrationEditor.setTheme("ace/theme/twilight")
-        integrationEditor.getSession().setMode("ace/mode/ruby")
-        integrationEditor.setOptions({
-          fontSize: 12,
-          minLines: 10,
-          enableSnippets: false,
-          highlightActiveLine: false,
-          enableLiveAutocompletion: true,
-          enableBasicAutocompletion: true
-        })
-        integrationEditor.renderer.setShowGutter(true)
-        integrationEditor.renderer.setPrintMarginColumn(false)
-        integrationEditor.renderer.setPadding(10)
-        integrationEditor.getSession().setUseWrapMode(true)
+        if ($('#integration-editor').length) {
+          integrationEditor = ace.edit("integration-editor")
+          integrationEditor.setTheme("ace/theme/twilight")
+          integrationEditor.getSession().setMode("ace/mode/ruby")
+          integrationEditor.setOptions({
+            fontSize: 12,
+            minLines: 10,
+            enableSnippets: false,
+            highlightActiveLine: false,
+            enableLiveAutocompletion: true,
+            enableBasicAutocompletion: true
+          })
+          integrationEditor.renderer.setShowGutter(true)
+          integrationEditor.renderer.setPrintMarginColumn(false)
+          integrationEditor.renderer.setPadding(10)
+          integrationEditor.getSession().setUseWrapMode(true)
+        }
       },
       showEditor: function() {
         var _this = this
@@ -255,7 +257,8 @@
           lines = 9
         }
 
-        this.editorHeight = ((lines + 1) * 16).toString() + "px"
+        this.editorHeight = ((lines + 1) * 16).toString();
+        $('#editor').height(this.editorHeight);
 
         Vue.nextTick(function () {
           editor.resize()
@@ -309,8 +312,8 @@
         dsSelectize.blur()
       })
 
-      this.showEditor()
-      this.showIntegrationEditor()
+      this.showEditor();
+      // this.showIntegrationEditor();
     }
   })
 
