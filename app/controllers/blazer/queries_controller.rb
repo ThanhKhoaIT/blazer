@@ -340,14 +340,15 @@ module Blazer
     end
 
     def set_accessible
-      @teams = Rails.cache.fetch('jarvis_teams') { get_teams } if Blazer.settings.key?('teams')
-      @assignees = Rails.cache.fetch('jarvis_assignees') { get_assignees } if Blazer.settings.key?('assignees')
+      @teams = get_teams
+      @assignees ||= get_assignees
     ensure
       @teams ||= []
       @assignees ||= []
     end
 
     def get_assignees
+      return [] unless Blazer.settings.key?('assignees')
       Blazer::RunStatement.new.perform(@data_source, Blazer.settings['assignees'], {}).rows.map do |row|
         [row.first, row.last.to_s.titleize]
       end
@@ -356,6 +357,7 @@ module Blazer
     end
 
     def get_teams
+      return [] unless Blazer.settings.key?('teams')
       Blazer::RunStatement.new.perform(@data_source, Blazer.settings['teams'], {}).rows.map do |row|
         [row.first, row.last.to_s.titleize]
       end
