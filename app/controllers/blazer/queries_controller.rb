@@ -61,6 +61,15 @@ module Blazer
       @statement = @query.statement.dup
       process_vars(@statement, @query.data_source)
 
+      filename = []
+      filename << @query.name.parameterize if @query
+      filename << params[:start_time].to_s.to_date
+      if params[:end_time]
+        filename << 'to'
+        filename << params[:end_time].to_s.to_date
+      end
+      @filename = filename.compact.join('-')
+
       @smart_vars = {}
       @sql_errors = []
       data_source = Blazer.data_sources[@query.data_source]
@@ -253,7 +262,8 @@ module Blazer
         end
       end
 
-      @filename = @query.name.parameterize if @query
+      @filename = params[:filename] || @query&.name&.parameterize
+
       @min_width_types = @columns.each_with_index.select { |c, i| @first_row[i].is_a?(Time) || @first_row[i].is_a?(String) || @data_source.smart_columns[c] }.map(&:last)
 
       @boom = @result.boom if @result
@@ -278,7 +288,6 @@ module Blazer
         end
       end
 
-      filename = @query.try(:name).try(:parameterize).presence || 'query'
       respond_to do |format|
         format.html do
           render layout: false
@@ -286,10 +295,14 @@ module Blazer
         format.xlsx do
           parser = ::Blazer::ExcelParser.new(@query, @columns, @rows)
           tmp_file = parser.export
-          send_file tmp_file, type: "application/xlsx; charset=utf-8; header=present", disposition: "attachment; filename=\"#{parser.filename}\""
+          send_file tmp_file,
+            type: 'application/xlsx; charset=utf-8; header=present',
+            disposition: "attachment; filename=\"#{@filename}.xlsx\""
         end
         format.csv do
-          send_data csv_data(@columns, @rows, @data_source), type: "text/csv; charset=utf-8; header=present", disposition: "attachment; filename=\"#{filename}.csv\""
+          send_data csv_data(@columns, @rows, @data_source),
+            type: 'text/csv; charset=utf-8; header=present',
+            disposition: "attachment; filename=\"#{@filename}.csv\""
         end
       end
     end
