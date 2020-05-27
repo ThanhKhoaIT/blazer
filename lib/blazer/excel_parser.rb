@@ -13,10 +13,6 @@ module Blazer
       save_file!
     end
 
-    def filename
-      "#{query.name.to_s.parameterize}-#{Time.current.strftime('%y-%m-%d')}.xlsx"
-    end
-
     private
 
     attr_reader :query, :excel
@@ -31,7 +27,7 @@ module Blazer
     end
 
     def save_file!
-      tmp_file = Tempfile.new(filename).path
+      tmp_file = Tempfile.new.path
       excel.serialize(tmp_file)
       return tmp_file
     end
