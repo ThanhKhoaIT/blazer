@@ -42,6 +42,9 @@
     .form-group
       = f.label :slack_channels
       = f.text_field :slack_channels, placeholder: "Optional, comma separated", class: "form-control"
+    .form-group
+      = f.label :slack_members
+      = f.text_field :slack_members, placeholder: "Optional, comma separated", class: "form-control"
   %p.text-muted
     Emails #{Blazer.slack? ? "and Slack notifications " : nil}are sent when a check starts failing, and when it starts passing again.
   %p

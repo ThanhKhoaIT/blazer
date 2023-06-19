@@ -22,6 +22,14 @@ module Blazer
       end
     end
 
+    def split_slack_members
+      if Blazer.slack?
+        slack_members.to_s.split(",").map{ |m| "<@#{m.strip}>" }
+      else
+        []
+      end
+    end
+
     def update_state(result)
       check_type =
         if respond_to?(:check_type)

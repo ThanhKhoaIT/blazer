@@ -28,20 +28,38 @@ module Blazer
     end
 
     def self.failing_checks(channel, checks)
-      text =
-        checks.map do |check|
-          "<#{query_url(check.query_id)}|#{escape(check.query.name)}> #{escape(check.state)}"
-        end
+      all_mentions = []
+      attachments = checks.map do |check|
+        mentions = check.split_slack_members
+        all_mentions << mentions
+        result = Blazer.data_sources[check.query.data_source].run_statement(check.query.statement)
+        {
+          mrkdwn_in: %w[title text],
+          title: "<#{query_url(check.query_id)}|#{escape(check.query.name)}> #{escape(check.state)} #{mentions.join(' ')}",
+          text: "#{Blazer.slack_preview_items_number} first rows `#{result.columns.first}: #{result.rows.first(Blazer.slack_preview_items_number).map(&:first).join(', ')}`",
+          color: 'warning'
+        }
+      end
 
       payload = {
         channel: channel,
-        attachments: [
+        blocks: [
           {
-            title: escape("#{pluralize(checks.size, "Check")} Failing"),
-            text: text.join("\n"),
-            color: "warning"
+            type: 'header',
+            text: {
+              type: 'plain_text',
+              text: escape("#{pluralize(checks.size, 'Check')} Failing")
+            }
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: "Hey #{all_mentions.join(' ')}, there are some failing checks:"
+            }
           }
-        ]
+        ],
+        attachments: attachments
       }
 
       post(Blazer.slack_webhook_url, payload)

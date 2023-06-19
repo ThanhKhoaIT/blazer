@@ -33,10 +33,10 @@
         .form-group
           = f.label :description
           = f.text_area :description, placeholder: "Optional", style: "height: 80px;", class: "form-control"
-        - if @assignees.any?
+        - if @assignees_with_email.any?
           .form-group
             = f.label :assignees
-            = f.collection_select :assignee_ids, @assignees, :first, :last, {}, { placeholder: "Assignees", style: "height: 80px;", class: "form-control", multiple: true }
+            = f.collection_select :assignee_ids, @assignees_with_email, :first, :last, {}, { placeholder: "Assignees", style: "height: 80px;", class: "form-control", multiple: true }
         - if @teams.any?
           .form-group
             = f.label :teams
