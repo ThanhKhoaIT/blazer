@@ -44,7 +44,8 @@
       = f.text_field :slack_channels, placeholder: "Optional, comma separated", class: "form-control"
     .form-group
       = f.label :slack_members
-      = f.text_field :slack_members, placeholder: "Optional, comma separated", class: "form-control"
+      = f.collection_select :slack_members, @slack_mentions, :first, :last, {}, { placeholder: "User, Users group Slack ID", class: "form-control", multiple: true }
+    %p.text-muted Slack members: can select or enter new user/user_group Slack ID. It also supports special mentions: channel, everyone, here.
   %p.text-muted
     Emails #{Blazer.slack? ? "and Slack notifications " : nil}are sent when a check starts failing, and when it starts passing again.
   %p
@@ -52,3 +53,9 @@
       = link_to "Delete", check_path(@check), method: :delete, "data-confirm" => "Are you sure?", class: "btn btn-danger"
     = f.submit "Save", class: "btn btn-success"
     = link_to "Back", :back, class: "btn btn-link"
+:javascript
+  $(document).ready(function() {
+    $('#check_slack_members').select2({
+      tags: true,
+    });
+  });

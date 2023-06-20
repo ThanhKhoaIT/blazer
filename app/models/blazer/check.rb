@@ -1,5 +1,7 @@
 module Blazer
   class Check < Record
+    serialize :slack_members, Array
+
     belongs_to :creator, Blazer::BELONGS_TO_OPTIONAL.merge(class_name: Blazer.user_class.to_s) if Blazer.user_class
     belongs_to :query
 
@@ -22,12 +24,24 @@ module Blazer
       end
     end
 
-    def split_slack_members
-      if Blazer.slack?
-        slack_members.to_s.split(",").map{ |m| "<@#{m.strip}>" }
-      else
-        []
+    def slack_mention_tags
+      tags = []
+      slack_members.each do |code|
+        case code
+        when /^U/
+          tags << "<@#{code.strip}>"
+        when /^S/
+          tags << "<!subteam^#{code.strip}>"
+        when 'here'
+          tags << '<!here|here>'
+        when 'channel'
+          tags << '<!channel>'
+        when 'everyone'
+          tags << '<!everyone>'
+        end
       end
+
+      tags.uniq
     end
 
     def update_state(result)

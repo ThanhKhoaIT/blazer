@@ -30,7 +30,7 @@ module Blazer
     def self.failing_checks(channel, checks)
       all_mentions = []
       attachments = checks.map do |check|
-        mentions = check.split_slack_members
+        mentions = check.slack_mention_tags
         all_mentions << mentions
         result = Blazer.data_sources[check.query.data_source].run_statement(check.query.statement)
         {
@@ -55,7 +55,7 @@ module Blazer
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: "Hey #{all_mentions.join(' ')}, there are some failing checks:"
+              text: "Hey #{all_mentions.uniq.join(' ')}, there are some failing checks:"
             }
           }
         ],
