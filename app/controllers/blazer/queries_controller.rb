@@ -362,8 +362,16 @@ module Blazer
 
     def get_assignees
       return [] unless Blazer.settings.key?('assignees')
+
       Blazer::RunStatement.new.perform(@data_source, Blazer.settings['assignees'], {}).rows.map do |row|
-        [row.first, row.last.to_s.titleize]
+        case row.size
+        when 2
+          [row.first, row.last.to_s.titleize]
+        when 3
+          [row.first, "#{row.second.to_s.titleize} - #{row.last}"]
+        else
+          [row.first, row.first]
+        end
       end
     rescue
       []

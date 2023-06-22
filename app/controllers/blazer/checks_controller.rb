@@ -1,6 +1,7 @@
 module Blazer
   class ChecksController < BaseController
     before_action :set_check, only: [:edit, :update, :destroy, :run]
+    before_action :set_accessible, only: [:new, :edit]
 
     def index
       state_order = [nil, "disabled", "error", "timed out", "failing", "passing"]
@@ -46,11 +47,26 @@ module Blazer
     private
 
       def check_params
-        params.require(:check).permit(:query_id, :emails, :slack_channels, :invert, :check_type, :schedule)
+        params.require(:check).permit(:query_id, :emails, :slack_channels, :invert, :check_type, :schedule, slack_members: [])
       end
 
       def set_check
         @check = Blazer::Check.find(params[:id])
+      end
+
+      def set_accessible
+        @slack_mentions ||= get_slack_mentions + @check.slack_members.each_with_object([]) { |m, list| list << [m, m] if m.present? }
+      ensure
+        @slack_mentions ||= []
+      end
+
+      def get_slack_mentions
+        return [] unless Blazer.settings.key?('slack_mentions')
+        Blazer::RunStatement.new.perform(Blazer.data_sources[@check.query.data_source], Blazer.settings['slack_mentions'], {}).rows.map do |row|
+          [row.last, "[#{row.first}] #{row.second} - ##{row.last}"]
+        end
+      rescue
+        []
       end
   end
 end
