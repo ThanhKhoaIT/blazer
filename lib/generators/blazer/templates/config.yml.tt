@@ -61,7 +61,6 @@ audit: true
 # mapbox_access_token: <%= ENV["MAPBOX_ACCESS_TOKEN"] %>
 
 # assignees: 'SELECT id, name FROM users ORDER BY id ASC'
-# assignees_with_email: 'SELECT id, name, email FROM users ORDER BY id ASC'
 # slack_mentions: 'SELECT 'User' as type, name as title, ext_code as code FROM users ORDER BY id ASC'
 # teams: 'SELECT id, name FROM teams'
 

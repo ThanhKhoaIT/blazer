@@ -355,26 +355,23 @@ module Blazer
     def set_accessible
       @teams = get_teams
       @assignees ||= get_assignees
-      @assignees_with_email ||= get_assignees_with_email
     ensure
       @teams ||= []
       @assignees ||= []
-      @assignees_with_email ||= []
     end
 
     def get_assignees
       return [] unless Blazer.settings.key?('assignees')
-      Blazer::RunStatement.new.perform(@data_source, Blazer.settings['assignees'], {}).rows.map do |row|
-        [row.first, row.last.to_s.titleize]
-      end
-    rescue
-      []
-    end
 
-    def get_assignees_with_email
-      return [] unless Blazer.settings.key?('assignees_with_email')
-      Blazer::RunStatement.new.perform(@data_source, Blazer.settings['assignees_with_email'], {}).rows.map do |row|
-        [row.first, "#{row.second.to_s.titleize} - #{row.last}"]
+      Blazer::RunStatement.new.perform(@data_source, Blazer.settings['assignees'], {}).rows.map do |row|
+        case row.size
+        when 2
+          [row.first, row.last.to_s.titleize]
+        when 3
+          [row.first, "#{row.second.to_s.titleize} - #{row.last}"]
+        else
+          [row.first, row.first]
+        end
       end
     rescue
       []

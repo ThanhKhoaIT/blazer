@@ -50,7 +50,6 @@ module Blazer
     attr_accessor :check_schedules
     attr_accessor :mapbox_access_token
     attr_accessor :assignees
-    attr_accessor :assignees_with_email
     attr_accessor :teams
     attr_accessor :anomaly_checks
     attr_accessor :forecasting

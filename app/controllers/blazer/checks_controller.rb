@@ -55,7 +55,7 @@ module Blazer
       end
 
       def set_accessible
-        @slack_mentions ||= get_slack_mentions + @check.slack_members.reject(&:blank?).map { |m| [m, m] }
+        @slack_mentions ||= get_slack_mentions + @check.slack_members.each_with_object([]) { |m, list| list << [m, m] if m.present? }
       ensure
         @slack_mentions ||= []
       end
