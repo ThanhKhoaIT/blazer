@@ -1,6 +1,7 @@
 module Blazer
   class ChecksController < BaseController
     before_action :set_check, only: [:edit, :update, :destroy, :run]
+    before_action :set_new_check, only: [:new]
     before_action :set_accessible, only: [:new, :edit]
 
     def index
@@ -10,7 +11,6 @@ module Blazer
     end
 
     def new
-      @check = Blazer::Check.new(query_id: params[:query_id])
     end
 
     def create
@@ -54,15 +54,20 @@ module Blazer
         @check = Blazer::Check.find(params[:id])
       end
 
+      def set_new_check
+        @check = Blazer::Check.new(query_id: params[:query_id])
+      end
+
       def set_accessible
-        @slack_mentions ||= get_slack_mentions + @check.slack_members.each_with_object([]) { |m, list| list << [m, m] if m.present? }
+        existed_members = @check&.slack_members.presence || []
+        @slack_mentions ||= get_slack_mentions + existed_members.each_with_object([]) { |m, list| list << [m, m] if m.present? }
       ensure
         @slack_mentions ||= []
       end
 
       def get_slack_mentions
         return [] unless Blazer.settings.key?('slack_mentions')
-        Blazer::RunStatement.new.perform(Blazer.data_sources[@check.query.data_source], Blazer.settings['slack_mentions'], {}).rows.map do |row|
+        Blazer::RunStatement.new.perform(Blazer.data_sources[@check.query&.data_source], Blazer.settings['slack_mentions'], {}).rows.map do |row|
           [row.last, "[#{row.first}] #{row.second} - ##{row.last}"]
         end
       rescue
