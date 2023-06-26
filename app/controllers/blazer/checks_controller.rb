@@ -2,7 +2,6 @@ module Blazer
   class ChecksController < BaseController
     before_action :set_check, only: [:edit, :update, :destroy, :run]
     before_action :set_new_check, only: [:new]
-    before_action :set_accessible, only: [:new, :edit]
 
     def index
       state_order = [nil, "disabled", "error", "timed out", "failing", "passing"]
@@ -58,7 +57,8 @@ module Blazer
         @check = Blazer::Check.new(query_id: params[:query_id])
       end
 
-      def set_accessible
+      helper_method :slack_mentions
+      def slack_mentions
         existed_members = @check&.slack_members.presence || []
         @slack_mentions ||= get_slack_mentions + existed_members.each_with_object([]) { |m, list| list << [m, m] if m.present? }
       ensure
