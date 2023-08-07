@@ -1,7 +1,7 @@
 module Blazer
   class QueriesController < BaseController
     before_action :set_query, only: [:show, :edit, :update, :destroy, :refresh]
-    before_action :set_data_source, only: [:new, :edit, :tables, :docs, :schema, :cancel, :columns]
+    before_action :set_data_source, only: [:new, :edit, :tables, :docs, :schema, :cancel, :columns, :update]
     before_action :set_accessible, only: [:new, :create, :show, :edit, :update, :destroy, :refresh]
 
     def home
