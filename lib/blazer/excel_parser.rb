@@ -27,7 +27,8 @@ module Blazer
     end
 
     def save_file!
-      tmp_file = Tempfile.new.path
+      file_name = "#{query.id}_#{Time.current.to_i}"
+      tmp_file = Tempfile.new([file_name, '.xlsx']).path
       excel.serialize(tmp_file)
       return tmp_file
     end
