@@ -21,6 +21,12 @@ module Blazer
         error = nil
 
         begin
+          connection_model.connection
+        rescue ActiveRecord::ConnectionNotEstablished
+          reconnect
+        end
+
+        begin
           in_transaction do
             set_timeout(data_source.timeout) if data_source.timeout
 
