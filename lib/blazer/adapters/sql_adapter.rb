@@ -144,6 +144,11 @@ module Blazer
       end
 
       def schemas
+        begin
+          connection_model.connection
+        rescue ActiveRecord::ConnectionNotEstablished
+          reconnect
+        end
         settings["schemas"] || [connection_model.connection_config[:schema] || default_schema]
       end
 
